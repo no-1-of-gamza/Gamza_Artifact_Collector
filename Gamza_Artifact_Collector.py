@@ -9,6 +9,7 @@ from a_trash_bin_data import trashbin_data
 
 from datetime import datetime
 import os
+import argparse
 
 def main():
     print_message.print_welcome_message()
@@ -38,6 +39,7 @@ def main():
     os.mkdir(f"{date_time_save_folder}_{Inspector_name}_{Victim_name}")
 
     artifact=args.artifact
+    print(artifact)
 
     if artifact is False:
         browser_history()
@@ -45,17 +47,17 @@ def main():
         resistry_data()
         system_information()
         trashbin_data()
-    
-    elif artifact=="b":
-        browser_history()
-    elif artifact=="e":
-        event_log()
-    elif artifact=="r":
-        resistry_data()
-    elif artifact=="s":
-        system_information()
-    elif artifact=="t":
-        trashbin_data()
+    else :
+        if "b" in artifact :
+            browser_history()
+        if "e" in artifact:
+            event_log()
+        if "r" in artifact:
+            resistry_data()
+        if "i" in artifact:
+            system_information()
+        if "t" in artifact:
+            trashbin_data()
 
 
 if __name__ == "__main__":
