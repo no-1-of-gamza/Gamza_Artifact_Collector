@@ -1,10 +1,10 @@
 import print_message
 from option import option_set
-from a_browser_history import browser_history
-from a_event_log import event_log
-from a_resistry_data import resistry_data
-from a_system_information import system_information
-from a_trash_bin_data import trashbin_data
+from Artifact.a_browser_history import browser_history
+from Artifact.a_event_log import event_log
+from Artifact.a_resistry_data import resistry_data
+from Artifact.a_system_information import system_information
+from Artifact.a_trash_bin_data import trashbin_data
 
 
 from datetime import datetime
@@ -39,7 +39,7 @@ def main():
     os.mkdir(f"{date_time_save_folder}_{Inspector_name}_{Victim_name}")
 
     artifact=args.artifact
-    print(artifact)
+    search_file=args.search
 
     if artifact is False:
         browser_history()
@@ -47,7 +47,7 @@ def main():
         resistry_data()
         system_information()
         trashbin_data()
-    else :
+    elif artifact is True:
         if "b" in artifact :
             browser_history()
         if "e" in artifact:
@@ -58,6 +58,24 @@ def main():
             system_information()
         if "t" in artifact:
             trashbin_data()
+
+
+    if search_file is True:
+        if "doc" in search_file :
+            print("doc")
+        if "xls" in search_file:
+            print("xls")
+        if "txt" in search_file:
+            print("txt")
+        if "pdf" in search_file:
+            print("pdf")
+        if "zip" in search_file:
+            print("zip")
+        if "exe" in search_file:
+            print("exe")
+        if "lnk" in search_file:
+            print("lnk")
+
 
 
 if __name__ == "__main__":
