@@ -115,8 +115,8 @@ class Registry_config:
 
 
 class Registry_Collector:
-    def __init__(self, UTC):
-        self.result_path = ".\\Registry"
+    def __init__(self, result_path, UTC):
+        self.result_path = result_path
         self.UTC = UTC
 
         self.collected_info = []
