@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
-import shutil
+from multiprocessing import Process, Queue
+import subprocess
 
 
 class Registry_config:
@@ -36,17 +37,13 @@ class Registry_config:
 
         self.artifact["ntuser"] = [
             "C:\\Windows\\SysWOW64\\config",
-            "C:\\Windows\\SysWOW64\\config",
-            "C:\\Users\\Default",
-            "C:\\Windows\\ServiceProfiles\\LocalService",
-            "C:\\Windows\\ServiceProfiles\\NetworkService"
+            "C:\\Users\\Default"
         ]
-        self.artifact["usrclass"] = []
-        for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Windows\\SysWOW64\\config")
-            self.artifact["usrclass"].append("C:\\Windows\\SysWOW64\\config")
+        self.artifact["usrclass"] = [
+            "C:\\Windows\\SysWOW64\\config"
+        ]
 
-        # self.artifact["amcache"] = ["C:\\Windows\\appcompat\\Programs\\Amcache.hive"]
+        self.artifact["amcache"] = "C:\\Windows\\appcompat\\Programs\\Amcache.hve"
 
 
     def artifact_Win8(self):
@@ -61,16 +58,14 @@ class Registry_config:
         ]
 
         self.artifact["ntuser"] = [
-            "C:\\Users\\Default",
-            "C:\\Windows\\ServiceProfiles\\LocalService",
-            "C:\\Windows\\ServiceProfiles\\NetworkService"
+            "C:\\Users\\Default"
         ]
         self.artifact["usrclass"] = []
         for user in self.user_name:
             self.artifact["ntuser"].append("C:\\Users\\"+user)
             self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
 
-        # self.artifact["amcache"] = ["C:\\Windows\\AppCompat\\Programs\\Amcache.hive"]
+        self.artifact["amcache"] = "C:\\Windows\\AppCompat\\Programs\\Amcache.hve"
 
 
     def artifact_Win7(self):
@@ -84,14 +79,14 @@ class Registry_config:
         ]
 
         self.artifact["ntuser"] = [
-            "C:\\Users\\Default",
-            "C:\\Windows\\ServiceProfiles\\LocalService",
-            "C:\\Windows\\ServiceProfiles\\NetworkService"
+            "C:\\Users\\Default"
         ]
         self.artifact["usrclass"] = []
         for user in self.user_name:
             self.artifact["ntuser"].append("C:\\Users\\"+user)
             self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
+
+        self.artifact["amcache"] = "C:\\Windows\\AppCompat\\Programs\\RecentFileCache.bcf"
 
 
     def artifact_WinXP(self):
@@ -105,16 +100,10 @@ class Registry_config:
 
         self.artifact["ntuser"] = [
             "C:\\WINDOWS\\repair",
-            "C:\\Documents and Settings\\Default User",
-            "C:\\Documents and Settings\\Administrator",
-            "C:\\Documents and Settings\\LocalService",
-            "C:\\Documents and Settings\\NetworkService"
+            "C:\\Documents and Settings\\Default User", # caution: this path can't dump with this program
+            "C:\\Documents and Settings\\Administrator" # caution: this path can't dump with this program
         ]
-        self.artifact["usrclass"] = [
-            "C:\\Documents and Settings\\Administrator\\Local Settings\\Application Data\\Microsoft\\Windows",
-            "C:\\Documents and Settings\\LocalService\\Local Settings\\Application Data\\Microsoft\\Windows",
-            "C:\\Documents and Settings\\NetworkService\\Local Settings\\Application Data\\Microsoft\\Windows"
-        ]
+        self.artifact["usrclass"] = []
         for user in self.user_name:
             self.artifact["ntuser"].append("C:\\Users\\"+user)
             self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
@@ -129,24 +118,30 @@ class Registry_Collector:
 
 
     def collect(self, artifact_path):
+        dump_list = []
         try:
             for path in artifact_path["registry"]:
                 self.collected_info.append(self.get_file_info(path))
-                # self.collect_dump(path)
+                dump_list.append(path)
 
             for dir_path in artifact_path["ntuser"]:
                 file_list = os.listdir(dir_path)
                 for file_name in file_list:
                     if file_name[-10:].upper() == "NTUSER.DAT":
                         self.collected_info.append(self.get_file_info(dir_path+"\\"+file_name))
-                        # self.collect_dump(dir_path+"\\"+file_name)
+                        dump_list.append(dir_path+"\\"+file_name)
 
             for dir_path in artifact_path["usrclass"]:
                 file_list = os.listdir(dir_path)
                 for file_name in file_list:
                     if file_name[-12:].upper() == "USRCLASS.DAT":
                         self.collected_info.append(self.get_file_info(dir_path+"\\"+file_name))
-                        # self.collect_dump(dir_path+"\\"+file_name)
+                        dump_list.append(dir_path+"\\"+file_name)
+
+            self.collected_info.append(self.get_file_info(artifact_path["amcache"]))
+            dump_list.append(artifact_path["amcache"])
+
+            self.collect_dump(dump_list)
 
         except FileNotFoundError:
             print("FileNotFoundError occur")
@@ -188,30 +183,50 @@ class Registry_Collector:
 
         with open(self.result_path+'\\summary.txt', 'w') as f:
             f.write(output)
-
-
-    def collect_dump(self, file_path):
-        try:
-            file_name = file_path.split("\\")[-1]
-            src_stat = os.stat(file_path)
-            dst_file_path = self.result_path+"\\"+file_name
-
-            shutil.copyfile(file_path, dst_file_path)
-            os.utime(dst_file_path, (src_stat.st_atime, src_stat.st_mtime))
-        except PermissionError:
-            print("{}: PermissionError".format(file_path))
-
-
-#if __name__ == "__main__":
     
-    #result_path = ".\\Registry"
-    #user_name = ['yura']
-    #UTC = 9
 
-    #config = Registry_config("Windows 10 Pro", user_name)
-    #artifact_path = config.run()
+    def collect_dump(self, dump_list):
+        result_signal = Queue()
+        process_list = []
+        for path in dump_list:
+            process = Process(target=self.dump_worker, args=(path, result_signal))
+            process_list.append(process)
+            process.start()
 
-    #collector = Registry_Collector(result_path, UTC)
-    #collector.collect(artifact_path)
+        for p in process_list:
+            p.join()
 
-    #print("complete")
+        result = 0
+        cnt = len(dump_list)
+        while True:
+            result += result_signal.get()
+            if result >= cnt:
+                print("dumping registry complete...") # You can delete this code
+                break
+
+
+    def dump_worker(self, src_path, signal):
+        dst_path = self.result_path
+
+        subprocess.call("RawCopy64.exe /FileNamePath:"+src_path+" /OutputPath:"+dst_path, shell=True)
+        signal.put(1)
+
+
+# if __name__ == "__main__":
+    
+#     result_path = "D:\\Goorm\\Project_2\\code\\Registry"
+#     user_name = ['yura']
+#     UTC = 9
+
+#     start_time = time.time()
+
+#     config = Registry_config("Windows 10 Pro", user_name)
+#     artifact_path = config.run()
+
+#     collector = Registry_Collector(result_path, UTC)
+#     collector.collect(artifact_path)
+
+#     end_time = time.time()
+
+#     print("complete")
+#     print("time:", end_time-start_time)
