@@ -5,10 +5,9 @@ import subprocess
 
 
 class EventLog_Config:
-    def __init__(self, version:str, user_name:list, system_root:str):
-        self.artifact = {}
+    def __init__(self, version:str, system_root:str):
+        self.artifact = ""
         self.version = version
-        self.user_name = user_name
         self.system_root = system_root
 
 
@@ -133,13 +132,12 @@ class EventLog_Collector:
 # if __name__ == "__main__":
     
 #     result_path = "D:\\Goorm\\Project_2\\code\\EventLog"
-#     user_name = ['yura']
 #     UTC = 9
 #     system_root = "C:\\Windows"
 
 #     start_time = time.time()
 
-#     config = EventLog_Config("Windows 10 Pro", user_name, system_root)
+#     config = EventLog_Config("Windows 10 Pro", system_root)
 #     artifact_path = config.run()
 
 #     collector = EventLog_Collector(result_path, UTC)
