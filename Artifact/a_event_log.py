@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
-import shutil
+from multiprocessing import Process, Queue
+import subprocess
 
 
 class EventLog_Config:
@@ -25,15 +26,15 @@ class EventLog_Config:
 
 
     def artifact_Win10(self):
-        self.artifact = self.system_root+"\\System32\\Winevt\\Logs"
+        self.artifact = self.system_root+"\\System32\\winevt\\Logs"
 
 
     def artifact_Win8(self):
-        self.artifact = self.system_root+"\\System32\\Winevt\\Logs"
+        self.artifact = self.system_root+"\\System32\\winevt\\Logs"
 
 
     def artifact_Win7(self):
-        self.artifact = self.system_root+"\\System32\\Winevt\\Logs"
+        self.artifact = self.system_root+"\\System32\\winevt\\Logs"
 
 
     def artifact_WinXP(self):
@@ -51,17 +52,17 @@ class EventLog_Collector:
     def collect(self, artifact_path):
         dir_path = artifact_path
         file_list = os.listdir(dir_path)
+        dump_list = []
 
         for file_name in file_list:
             extension = file_name.split(".")[-1].lower()
             if extension == "evtx" or extension == "evt":
                 file_path = dir_path+"\\"+file_name
 
-                # get info
                 self.collected_info.append(self.get_file_info(file_path))
+                dump_list.append(file_path)
 
-                # get dump
-                # self.collect_dump(file_path)
+        self.collect_dump(dump_list)
         
         self.create_summary()
 
@@ -102,24 +103,41 @@ class EventLog_Collector:
             f.write(output)
 
 
-    def collect_dump(self, file_path):
-        try:
-            file_name = file_path.split("\\")[-1]
-            src_stat = os.stat(file_path)
-            dst_file_path = self.result_path+"\\"+file_name
+    def collect_dump(self, dump_list):
+        result_signal = Queue()
+        process_list = []
+        for path in dump_list:
+            process = Process(target=self.dump_worker, args=(path, result_signal))
+            process_list.append(process)
+            process.start()
 
-            shutil.copyfile(file_path, dst_file_path)
-            os.utime(dst_file_path, (src_stat.st_atime, src_stat.st_mtime))
-        except PermissionError:
-            print("{}: PermissionError".format(file_path))
+        for t in thread_list:
+            t.join()
+
+        result = 0
+        cnt = len(dump_list)
+        while True:
+            result += result_signal.get()
+            if result >= cnt:
+                print("dumping event log complete...") # You can delete this code
+                break
+
+
+    def dump_worker(self, src_path, signal):
+        dst_path = self.result_path
+
+        subprocess.call("RawCopy64.exe /FileNamePath:"+src_path+" /OutputPath:"+dst_path, shell=True)
+        signal.put(1)
 
 
 # if __name__ == "__main__":
     
-#     result_path = ".\\EventLog"
+#     result_path = "D:\\Goorm\\Project_2\\code\\EventLog"
 #     user_name = ['yura']
 #     UTC = 9
 #     system_root = "C:\\Windows"
+
+#     start_time = time.time()
 
 #     config = EventLog_Config("Windows 10 Pro", user_name, system_root)
 #     artifact_path = config.run()
@@ -127,4 +145,7 @@ class EventLog_Collector:
 #     collector = EventLog_Collector(result_path, UTC)
 #     collector.collect(artifact_path)
 
+#     end_time = time.time()
+
 #     print("complete")
+#     print("time:", end_time-start_time)
