@@ -68,6 +68,7 @@ class Systeminfo_Collector:
 		handle = winreg.ConnectRegistry(None, winreg.HKEY_USERS)
 		subkey_accounts = winreg.OpenKey(handle, "")
 		self.collected_info["AccountName"] = []
+		self.collected_info["UserProfile"] = []
 
 		try:
 			i = 0
@@ -75,15 +76,14 @@ class Systeminfo_Collector:
 				account_path = winreg.EnumKey(subkey_accounts, i)
 				parts_path = account_path.split('-')
 				i += 1
-				try:
-					pp = int(parts_path[7])
-				except ValueError:
-					continue
-				except IndexError:
+				if len(parts_path) < 4 or parts_path[3] != '21':
 					continue
 
 				account_name = self.get_accounts_name(account_path)
 				self.collected_info["AccountName"].append(account_name)
+
+				account_homepath = self.get_accounts_homepath(account_path)
+				self.collected_info["UserProfile"].append(account_homepath)
 
 		except Exception as e:
 			pass
@@ -104,11 +104,23 @@ class Systeminfo_Collector:
 		return account_name
 
 
+	def get_accounts_homepath(self, account_path) -> str:
+		handle = winreg.ConnectRegistry(None, winreg.HKEY_USERS)
+		subkey_accounts = winreg.OpenKey(handle, account_path+"\\Volatile Environment")
+
+		win_version = self.collected_info["ProductName"]
+		if win_version == "Microsoft Windows XP":
+			account_name = winreg.QueryValueEx(subkey_accounts, "HOMEPATH")[0]
+		else:
+			account_name = winreg.QueryValueEx(subkey_accounts, "USERPROFILE")[0]
+
+		return account_name
+
+
 	def create_summary(self):
 		output = "System Info\n"
 		output += "\n\n"
 
-        # 여기서 filename에 해당하는 첫번째 30을 본인 아티팩트에서 나올 수 있는 최대 파일명 길이로 설정
 		strFormat = '%-30s%s\n'
 
 		title = ['Type', 'Content']
@@ -132,6 +144,6 @@ if __name__ == "__main__":
 	result_path = ".\\SystemInfo"
 
 	collector = Systeminfo_Collector(result_path)
-	system_info = collector.collect() # 이 system_info가 메인으로 넘어가면 됨
+	system_info = collector.collect()
 
 	# print("complete")
