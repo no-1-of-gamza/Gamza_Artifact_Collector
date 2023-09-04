@@ -8,7 +8,7 @@ class Extension:
         self.result_path = result_path
         self.UTC = UTC
 
-        self.artifact_path = ["C:\\Users\\ryues\\Downloads\\test"]
+        self.artifact_path = []
         self.target_list = [".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk"]
 
         self.extension_info = []
