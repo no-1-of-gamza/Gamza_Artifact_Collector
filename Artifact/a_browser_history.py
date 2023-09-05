@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
 import shutil
+import subprocess
 # import time
 
 
@@ -71,7 +72,7 @@ class Browser_Config:
 					path+"User Data\\Default\\History-journal"
 				]
 				collected_subpath["cache"] = [
-					path+"User Data\\Default\\Cache"
+					path+"User Data\\Default\\Cache\\Cache_Data"
 				]
 				collected_subpath["cookie"] = [
 					path+"User Data\\Default\\Cookies",
@@ -152,7 +153,10 @@ class Browser_Config:
 				sub_path_roaming+"\\places.sqlite"
 			]
 			collected_subpath["cache"] += [
-				sub_path_local+"\\cache2"
+				sub_path_local+"\\cache2\\doomed",
+				sub_path_local+"\\cache2\\entries",
+				sub_path_local+"\\cache2\\index",
+				sub_path_local+"\\cache2\\index.txt"
 			]
 			collected_subpath["cookie"] += [
 				sub_path_roaming+"\\cookies.sqlite"
@@ -214,7 +218,7 @@ class Browser_Config:
 					path+"User Data\\Default\\History-journal"
 				]
 				collected_subpath["cache"] = [
-					path+"User Data\\Default\\Cache"
+					path+"User Data\\Default\\Cache\\Cache_Data"
 				]
 				collected_subpath["cookie"] = [
 					path+"User Data\\Default\\Cookies",
@@ -329,7 +333,7 @@ class Browser_Config:
 
 		for user in user_list:
 			name = user.split("\\")[-1]
-			sub_path = self.get_subpath_Edge(user+default_path)
+			sub_path = self.get_subpath_Whale(user+default_path)
 
 			for key in sub_path.keys():
 				collected_path[name+"."+key] += sub_path[key]
@@ -356,7 +360,7 @@ class Browser_Config:
 					path+"User Data\\Default\\History-journal"
 				]
 				collected_subpath["cache"] = [
-					path+"User Data\\Default\\Cache"
+					path+"User Data\\Default\\Cache\\Cache_Data"
 				]
 				collected_subpath["cookie"] = [
 					path+"User Data\\Default\\Cookies",
@@ -395,7 +399,7 @@ class Browser_Collector:
 	def collect(self, artifact_path):
 		dump_list = self.parse_artifact(artifact_path)
 		self.collect_dump(dump_list)
-
+		
 		self.create_summary()
 
 
@@ -413,11 +417,16 @@ class Browser_Collector:
 
 				artifact_subpath = browser_path+"\\"+artifact_name
 				self.mkdir(artifact_subpath)
-
+				
 				for path in browser_artifact[artifact_name]:
 					self.collected_info.append([browser_name] + self.get_file_info(path))
 					file_name = path.split("\\")[-1]
-					dump_list.append([path, artifact_subpath+"\\"+file_name])
+
+
+					if artifact_name.split(".")[-1] == "cache":
+						dump_list.append([path, artifact_subpath+"\\"+file_name])
+					else:
+						dump_list.append([path, artifact_subpath+"\\"+file_name])
 
 		return dump_list
 
@@ -455,14 +464,49 @@ class Browser_Collector:
 
 
 	def dump(self, src_path, dst_path):
+		worker_list = ["doomed", "entries", "index.txt", "index", "data_0", "data_1", "data_2", "data_3"]
+
 		try:
 			if os.path.isfile(src_path):
-				shutil.copy2(src_path, dst_path)
+				if src_path.split("\\")[-1] not in worker_list:
+					shutil.copy2(src_path, dst_path)
+				else:
+					self.dump_worker(src_path, "\\".join(dst_path.split("\\")[:-1]))
 			else:
-				pass
-				# shutil.copytree(src_path, dst_path) # Permission Error occur
-		except Exception as e:
-			print("dump:", e)
+				item_list = self.search_directory(src_path, dst_path)
+
+				for item in item_list:
+					if item[0].split("\\")[-1] not in worker_list:
+						shutil.copy2(item[0], item[1])
+					else:
+						print(item[0])
+						self.dump_worker(item[0], "\\".join(item[1].split("\\")[:-1]))
+
+		except FileNotFoundError:
+			print("cannot find the file:", src_path)
+	
+
+	def search_directory(self, src_path, dst_path: str) -> list:
+		file_list = []
+
+		self.mkdir(dst_path)
+
+		item_list = os.listdir(src_path)
+		for item in item_list:
+			if os.path.isfile(src_path+"\\"+item):
+				file_list.append([src_path+"\\"+item, dst_path+"\\"+item])
+			else:
+				file_list += self.search_directory(src_path+"\\"+item, dst_path+"\\"+item)
+
+		return file_list
+	
+
+	def dump_worker(self, src_path, dst_path):
+		try:
+			subprocess.run(['RawCopy64.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
+
+		except subprocess.Exception as e:
+			print("{}: {}".format(e, src_path))
 
 
 	def create_summary(self):
@@ -494,6 +538,11 @@ class Browser_Collector:
 
 # 	collector = Browser_Collector(result_path, UTC)
 # 	collector.collect(artifact_path)
+
+# 	end_time = time.time()
+
+# 	print("complete")
+# 	print("time:", end_time-start_time)
 
 # 	end_time = time.time()
 
