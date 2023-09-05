@@ -503,7 +503,7 @@ class Browser_Collector:
 
 	def dump_worker(self, src_path, dst_path):
 		try:
-			subprocess.run(['RawCopy64.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
+			subprocess.run(['RawCopy.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
 
 		except subprocess.Exception as e:
 			print("{}: {}".format(e, src_path))
