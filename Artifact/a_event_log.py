@@ -110,22 +110,25 @@ class EventLog_Collector:
             process_list.append(process)
             process.start()
 
-        for t in thread_list:
-            t.join()
+        for p in process_list:
+            p.join()
 
         result = 0
         cnt = len(dump_list)
         while True:
             result += result_signal.get()
             if result >= cnt:
-                print("dumping event log complete...") # You can delete this code
+                print("dumping event log complete...")
                 break
 
 
     def dump_worker(self, src_path, signal):
         dst_path = self.result_path
+        try:
+            subprocess.run(["RawCopy.exe", "/FileNamePath:"+src_path, "/OutputPath:"+dst_path])
+        except Exception as e:
+            print(e)
 
-        subprocess.call("RawCopy64.exe /FileNamePath:"+src_path+" /OutputPath:"+dst_path, shell=True)
         signal.put(1)
 
 
