@@ -41,33 +41,38 @@ def main():
     #py. 경로에 폴더생성
     current_dir=os.getcwd()
     print(f"Maked folder {current_dir}")
-    print(f"File name: {date_time_save_folder}_{Inspector_name}_{Victim_name}")
-    new_inspect=os.mkdir(f"{date_time_save_folder}_{Inspector_name}_{Victim_name}")
-    # 새로운 폴더로 이동
-    os.rename(current_dir, os.path.join(current_dir, new_inspect))
+    print(f"Folder name: {date_time_save_folder}_{Inspector_name}_{Victim_name}")
+    inspect_path=f"{date_time_save_folder}_{Inspector_name}_{Victim_name}"
+    os.mkdir(f"{inspect_path}")
 
     artifact=args.artifact
     search_file=args.search
-
     #system infomation 아티팩트 불러오기 (기본)
-    system_infomation = Systeminfo_Collector()
-    user_name=system_infomation.collect_systeminfo["ComputerName"]
-    UTC=system_infomation.collect_timezone["Timezone"]
-    Window_version = system_infomation.collected_info["ProductName"]
+    system_infomation_collector = Systeminfo_Collector(inspect_path)
+    system_infomation = system_infomation_collector.collect()
+
+    user_name=[system_infomation['ComputerName']]
+    UTC=system_infomation['Timezone']
+    Window_version = system_infomation["ProductName"]
+    system_infomation_collector.create_summary()
 
 
-    if artifact is False:
+    if artifact is None:
         #Browser_History
         browser_history()
 
         #Event_Log
         event_log()
 
-        #Resigter_Data
+        #Register_Data
+        os.mkdir(f"{inspect_path}//Registry")
 
+        Register_result_path = str(inspect_path) + "\\Registry"
+        
         Register_config = Registry_config(Window_version, user_name)
         Resgister_artifact_path = Register_config.run()
-        Register_collector = Registry_Collector(UTC)
+
+        Register_collector = Registry_Collector(Register_result_path, UTC)
         Register_collector.collect(Resgister_artifact_path)
 
         #Trashbin_Data      
@@ -80,11 +85,7 @@ def main():
             event_log()
 
         if "r" in artifact:        
-            Register_config = Registry_config(Window_version, user_name)
-            Resgister_artifact_path = Register_config.run()
-            Register_collector = Registry_Collector(UTC)
-            Register_collector.collect(Resgister_artifact_path)
-
+            print("Register")
         if "t" in artifact:
             trashbin_data()
 
