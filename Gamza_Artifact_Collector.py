@@ -5,7 +5,7 @@ from Artifact.a_browser_history import browser_history
 from Artifact.a_trash_bin_data import trashbin_data
 
 from Artifact.a_system_information import Systeminfo_Collector
-from Artifact.a_resistry_data import Registry_config, Registry_Collector
+from Artifact.a_registry_data import Registry_config, Registry_Collector
 from Artifact.a_event_log import EventLog_Config, EventLog_Collector
 
 from datetime import datetime
