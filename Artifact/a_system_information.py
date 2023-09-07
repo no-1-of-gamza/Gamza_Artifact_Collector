@@ -8,9 +8,8 @@ class Systeminfo_Collector:
 
 
 	def collect(self):
-
-		subkey_select = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\Select", 0, winreg.KEY_READ)
-		controlset = "ControlSet00"+str(winreg.QueryValueEx(subkey_select, "Current")[0])
+		current_num = self.get_HKLM_value("SYSTEM\\Select", "Current")
+		controlset = "ControlSet00"+str(current_num)
 
 		self.collect_systeminfo(controlset)
 		self.collect_accounts()
@@ -22,24 +21,12 @@ class Systeminfo_Collector:
 
 
 	def collect_systeminfo(self, controlset):
-
-		subkey_computername = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\"+controlset+"\\Control\\ComputerName\\ActiveComputerName", 0, winreg.KEY_READ)
-		self.collected_info["ComputerName"] = winreg.QueryValueEx(subkey_computername, "ComputerName")[0]
-
-		subkey_osname = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-		self.collected_info["ProductName"] = winreg.QueryValueEx(subkey_osname, "ProductName")[0]
-
-		subkey_architecture = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\"+controlset+"\\Control\\Session Manager\\Environment", 0, winreg.KEY_READ)
-		self.collected_info["Processor_Architecture"] = winreg.QueryValueEx(subkey_architecture, "PROCESSOR_ARCHITECTURE")[0]
-
-		subkey_installpath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-		self.collected_info["InstallPath"] = winreg.QueryValueEx(subkey_installpath, "SystemRoot")[0]
-
-		subkey_productid = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-		self.collected_info["ProductId"] = winreg.QueryValueEx(subkey_productid, "ProductId")[0]
-
-		subkey_owner = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-		self.collected_info["RegisteredOwner"] = winreg.QueryValueEx(subkey_owner, "RegisteredOwner")[0]
+			self.collected_info["ComputerName"] = self.get_HKLM_value("SYSTEM\\"+controlset+"\\Control\\ComputerName\\ActiveComputerName", "ComputerName")
+			self.collected_info["ProductName"] = self.get_HKLM_value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName")
+			self.collected_info["Processor_Architecture"] = self.get_HKLM_value("SYSTEM\\"+controlset+"\\Control\\Session Manager\\Environment", "Processor_Architecture")
+			self.collected_info["InstallPath"] = self.get_HKLM_value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "SystemRoot")
+			self.collected_info["ProductId"] = self.get_HKLM_value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductId")
+			self.collected_info["RegisteredOwner"] = self.get_HKLM_value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "RegisteredOwner")
 
 
 	def collect_timezone(self, controlset):
@@ -65,50 +52,54 @@ class Systeminfo_Collector:
 
 
 	def collect_accounts(self):
-		handle = winreg.ConnectRegistry(None, winreg.HKEY_USERS)
-		subkey_accounts = winreg.OpenKey(handle, "")
+		handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+		subkey_accounts = winreg.OpenKey(handle, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList")
+		self.collected_info["ProfilePath"] = []
 		self.collected_info["AccountName"] = []
 
 		try:
 			i = 0
 			while True:
-				account_path = winreg.EnumKey(subkey_accounts, i)
-				parts_path = account_path.split('-')
+				profile_sid = winreg.EnumKey(subkey_accounts, i)
+				parts_path = profile_sid.split('-')
 				i += 1
-				try:
-					pp = int(parts_path[7])
-				except ValueError:
-					continue
-				except IndexError:
+				if len(parts_path) < 4 or parts_path[3] != '21':
 					continue
 
-				account_name = self.get_accounts_name(account_path)
-				self.collected_info["AccountName"].append(account_name)
+				profile_path = self.get_profile_path(profile_sid)
+				self.collected_info["ProfilePath"].append(profile_path)
+
+				self.collected_info["AccountName"].append(profile_path.split("\\")[-1])
 
 		except Exception as e:
 			pass
 
 
-	def get_accounts_name(self, account_path) -> str:
-		handle = winreg.ConnectRegistry(None, winreg.HKEY_USERS)
-		subkey_accounts = winreg.OpenKey(handle, account_path+"\\Volatile Environment")
-		account_name = ""
+	def get_profile_path(self, profile_sid: str) -> str:
+		profile_path = self.get_HKLM_value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\"+profile_sid, "ProfileImagePath")
 
-		win_version = self.collected_info["ProductName"]
-		if win_version == "Microsoft Windows XP":
-			res = winreg.QueryValueEx(subkey_accounts, "HOMEPATH")[0]
-			account_name = res.split("\\")[-1]
-		else:
-			account_name = winreg.QueryValueEx(subkey_accounts, "USERNAME")[0]
+		os_version = self.collected_info["ProductName"]
+		if os_version == "Microsoft Windows XP":
+			profile_path = self.collected_info["InstallPath"][0] + profile_path[13:]
 
-		return account_name
+		return profile_path
+
+
+	def get_HKLM_value(self, key_path, subkey_name):
+		try:
+			subkey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path, 0, winreg.KEY_READ)
+			value = winreg.QueryValueEx(subkey, subkey_name)[0]
+		except Exception as e:
+			print("get value:", e)
+			value = ""
+
+		return value
 
 
 	def create_summary(self):
 		output = "System Info\n"
 		output += "\n\n"
 
-        # 여기서 filename에 해당하는 첫번째 30을 본인 아티팩트에서 나올 수 있는 최대 파일명 길이로 설정
 		strFormat = '%-30s%s\n'
 
 		title = ['Type', 'Content']
@@ -132,6 +123,6 @@ if __name__ == "__main__":
 	result_path = ".\\SystemInfo"
 
 	collector = Systeminfo_Collector(result_path)
-	system_info = collector.collect() # 이 system_info가 메인으로 넘어가면 됨
+	system_info = collector.collect()
 
 	# print("complete")
