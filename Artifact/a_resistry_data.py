@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+import shutil
 
 
 class Registry_config:
@@ -34,15 +35,16 @@ class Registry_config:
         ]
 
         self.artifact["ntuser"] = [
-            "C:\\Windows\\SysWOW64\\config\\Default User.NTUSER.DAT",
-            "C:\\Windows\\SysWOW64\\config\\Default.NTUSER.DAT",
-            "C:\\Users\\Default\\NTUSER.DAT",
-            "C:\\Windows\\ServiceProfiles\\LocalService\\NTUSER.DAT",
-            "C:\\Windows\\ServiceProfiles\\NetworkService\\NTUSER.DAT"
+            "C:\\Windows\\SysWOW64\\config",
+            "C:\\Windows\\SysWOW64\\config",
+            "C:\\Users\\Default",
+            "C:\\Windows\\ServiceProfiles\\LocalService",
+            "C:\\Windows\\ServiceProfiles\\NetworkService"
         ]
+        self.artifact["usrclass"] = []
         for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Windows\\SysWOW64\\config\\"+user+".NTUSER.DAT")
-            self.artifact["ntuser"].append("C:\\Windows\\SysWOW64\\config\\"+user+".USRCLASS.DAT")
+            self.artifact["ntuser"].append("C:\\Windows\\SysWOW64\\config")
+            self.artifact["usrclass"].append("C:\\Windows\\SysWOW64\\config")
 
         # self.artifact["amcache"] = ["C:\\Windows\\appcompat\\Programs\\Amcache.hive"]
 
@@ -59,13 +61,14 @@ class Registry_config:
         ]
 
         self.artifact["ntuser"] = [
-            "C:\\Users\\Default\\NTUSER.DAT",
-            "C:\\Windows\\ServiceProfiles\\LocalService\\NTUSER.DAT",
-            "C:\\Windows\\ServiceProfiles\\NetworkService\\NTUSER.DAT"
+            "C:\\Users\\Default",
+            "C:\\Windows\\ServiceProfiles\\LocalService",
+            "C:\\Windows\\ServiceProfiles\\NetworkService"
         ]
+        self.artifact["usrclass"] = []
         for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\"+user+"\\NTUSER.DAT")
-            self.artifact["ntuser"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat")
+            self.artifact["ntuser"].append("C:\\Users\\"+user)
+            self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
 
         # self.artifact["amcache"] = ["C:\\Windows\\AppCompat\\Programs\\Amcache.hive"]
 
@@ -81,13 +84,14 @@ class Registry_config:
         ]
 
         self.artifact["ntuser"] = [
-            "C:\\Users\\Default\\NTUSER.DAT",
-            "C:\\Windows\\ServiceProfiles\\LocalService\\NTUSER.DAT",
-            "C:\\Windows\\ServiceProfiles\\NetworkService\\NTUSER.DAT"
+            "C:\\Users\\Default",
+            "C:\\Windows\\ServiceProfiles\\LocalService",
+            "C:\\Windows\\ServiceProfiles\\NetworkService"
         ]
+        self.artifact["usrclass"] = []
         for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\"+user+"\\NTUSER.DAT")
-            self.artifact["ntuser"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat")
+            self.artifact["ntuser"].append("C:\\Users\\"+user)
+            self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
 
 
     def artifact_WinXP(self):
@@ -100,18 +104,20 @@ class Registry_config:
         ]
 
         self.artifact["ntuser"] = [
-            "C:\\WINDOWS\\repair\\ntuser.dat",
-            "C:\\Documents and Settings\\Default User\\NTUSER.DAT",
-            "C:\\Documents and Settings\\Administrator\\NTUSER.DAT",
-            "C:\\Documents and Settings\\LocalService\\NTUSER.DAT",
-            "C:\\Documents and Settings\\NetworkService\\NTUSER.DAT"
-            "C:\\Documents and Settings\\Administrator\\Local Settings\\Application Data\\Microsoft\\Windows\\UsrClass.dat",
-            "C:\\Documents and Settings\\LocalService\\Local Settings\\Application Data\\Microsoft\\Windows\\UsrClass.dat",
-            "C:\\Documents and Settings\\NetworkService\\Local Settings\\Application Data\\Microsoft\\Windows\\UsrClass.dat"
+            "C:\\WINDOWS\\repair",
+            "C:\\Documents and Settings\\Default User",
+            "C:\\Documents and Settings\\Administrator",
+            "C:\\Documents and Settings\\LocalService",
+            "C:\\Documents and Settings\\NetworkService"
+        ]
+        self.artifact["usrclass"] = [
+            "C:\\Documents and Settings\\Administrator\\Local Settings\\Application Data\\Microsoft\\Windows",
+            "C:\\Documents and Settings\\LocalService\\Local Settings\\Application Data\\Microsoft\\Windows",
+            "C:\\Documents and Settings\\NetworkService\\Local Settings\\Application Data\\Microsoft\\Windows"
         ]
         for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\"+user+"\\NTUSER.DAT")
-            self.artifact["ntuser"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat")
+            self.artifact["ntuser"].append("C:\\Users\\"+user)
+            self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
 
 
 class Registry_Collector:
@@ -123,13 +129,27 @@ class Registry_Collector:
 
 
     def collect(self, artifact_path):
-        for key in artifact_path.keys():
-            for path in artifact_path[key]:
-                # get info
+        try:
+            for path in artifact_path["registry"]:
                 self.collected_info.append(self.get_file_info(path))
+                # self.collect_dump(path)
 
-                # get dump
-                pass
+            for dir_path in artifact_path["ntuser"]:
+                file_list = os.listdir(dir_path)
+                for file_name in file_list:
+                    if file_name[-10:].upper() == "NTUSER.DAT":
+                        self.collected_info.append(self.get_file_info(dir_path+"\\"+file_name))
+                        # self.collect_dump(dir_path+"\\"+file_name)
+
+            for dir_path in artifact_path["usrclass"]:
+                file_list = os.listdir(dir_path)
+                for file_name in file_list:
+                    if file_name[-12:].upper() == "USRCLASS.DAT":
+                        self.collected_info.append(self.get_file_info(dir_path+"\\"+file_name))
+                        # self.collect_dump(dir_path+"\\"+file_name)
+
+        except FileNotFoundError:
+            print("FileNotFoundError occur")
         
         self.create_summary()
 
@@ -141,7 +161,7 @@ class Registry_Collector:
         mtime = self.timestamp_to_UTC(stat.st_mtime)
         atime = self.timestamp_to_UTC(stat.st_atime)
         ctime = self.timestamp_to_UTC(stat.st_ctime)
-        size = stat.st_size//1024 # KB 단위
+        size = stat.st_size//1024 # KB
 
         info = [name, mtime, atime, ctime, size, file_path]
         return info
@@ -158,7 +178,6 @@ class Registry_Collector:
         output = "Registry     UTC+{}\n".format(self.UTC)
         output += "\n\n"
 
-        # 여기서 filename에 해당하는 첫번째 30을 본인 아티팩트에서 나올 수 있는 최대 파일명 길이로 설정
         strFormat = '%-30s%-25s%-25s%-25s%-20s%s\n'
 
         title = ['File name', 'Modify time', 'Access time', 'Create time', 'File size(KB)', 'Path']
@@ -171,8 +190,16 @@ class Registry_Collector:
             f.write(output)
 
 
-    def collect_dump(self):
-        pass
+    def collect_dump(self, file_path):
+        try:
+            file_name = file_path.split("\\")[-1]
+            src_stat = os.stat(file_path)
+            dst_file_path = self.result_path+"\\"+file_name
+
+            shutil.copyfile(file_path, dst_file_path)
+            os.utime(dst_file_path, (src_stat.st_atime, src_stat.st_mtime))
+        except PermissionError:
+            print("{}: PermissionError".format(file_path))
 
 
 #if __name__ == "__main__":
