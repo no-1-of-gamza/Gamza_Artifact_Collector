@@ -56,11 +56,10 @@ def main():
         system_information_collector = Systeminfo_Collector(inspect_path)
         system_information = system_information_collector.collect()
 
-        user_name=[system_information['ComputerName']]
         UTC=system_information['Timezone']
         Window_version = system_information["ProductName"]
         InstallPath_system_root = system_information["InstallPath"]
-        profile_list= system_information["UserProfile"]
+        profile_list = system_information["UserProfile"]
 
 
         if artifact is None:
@@ -85,12 +84,12 @@ def main():
             EventLog_collector = EventLog_Collector(Event_log_result_path, UTC)
             EventLog_collector.collect(EventLog_artifact_path)
 
-            #Register_Data
+            #Registry_Data
             os.mkdir(f"{inspect_path}//Registry")
 
             Register_result_path = str(inspect_path) + "\\Registry"
             
-            Register_config = Registry_config(Window_version, user_name)
+            Register_config = Registry_config(Window_version, profile_list)
             Resgister_artifact_path = Register_config.run()
 
             Register_collector = Registry_Collector(Register_result_path, UTC)

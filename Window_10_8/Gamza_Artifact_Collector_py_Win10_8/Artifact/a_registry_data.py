@@ -6,10 +6,10 @@ import subprocess
 
 
 class Registry_config:
-    def __init__(self, version:str, user_name:list):
+    def __init__(self, version:str, profile_list:list):
         self.artifact = {}
         self.version = version
-        self.user_name = user_name
+        self.profile_list = profile_list
 
 
     def run(self) -> object:
@@ -64,9 +64,9 @@ class Registry_config:
             "C:\\Users\\Default"
         ]
         self.artifact["usrclass"] = []
-        for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\"+user)
-            self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
+        for profile_path in self.profile_list:
+            self.artifact["ntuser"].append(profile_path)
+            self.artifact["usrclass"].append(profile_path+"\\AppData\\Local\\Microsoft\\Windows")
 
         self.artifact["amcache"] = ["C:\\Windows\\AppCompat\\Programs\\Amcache.hve"]
 
@@ -85,9 +85,9 @@ class Registry_config:
             "C:\\Users\\Default"
         ]
         self.artifact["usrclass"] = []
-        for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\"+user)
-            self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
+        for profile_path in self.profile_list:
+            self.artifact["ntuser"].append(profile_path)
+            self.artifact["usrclass"].append(profile_path+"\\AppData\\Local\\Microsoft\\Windows")
 
         self.artifact["amcache"] = ["C:\\Windows\\AppCompat\\Programs\\RecentFileCache.bcf"]
 
@@ -107,9 +107,9 @@ class Registry_config:
             "C:\\Documents and Settings\\Administrator"
         ]
         self.artifact["usrclass"] = []
-        for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\"+user)
-            self.artifact["usrclass"].append("C:\\Users\\"+user+"\\AppData\\Local\\Microsoft\\Windows")
+        for profile_path in self.profile_list:
+            self.artifact["ntuser"].append(profile_path)
+            self.artifact["usrclass"].append(profile_path+"\\AppData\\Local\\Microsoft\\Windows")
 
         self.artifact["amcache"] = []
 
@@ -232,12 +232,12 @@ class Registry_Collector:
 # if __name__ == "__main__":
     
 #     result_path = "D:\\Goorm\\Project_2\\code\\Registry"
-#     user_name = ['yura']
+#     profile_list = ["C:\\Users\\yura"]
 #     UTC = 9
 
 #     start_time = time.time()
 
-#     config = Registry_config("Windows 10 Pro", user_name)
+#     config = Registry_config("Windows 10 Pro", profile_list)
 #     artifact_path = config.run()
 
 #     collector = Registry_Collector(result_path, UTC)

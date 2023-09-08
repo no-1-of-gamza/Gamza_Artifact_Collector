@@ -6,29 +6,29 @@ import subprocess
 
 
 class Browser_Config:
-	def __init__(self, version:str, system_root:str, user_list:list):
+	def __init__(self, version:str, system_root:str, profile_list:list):
 		self.artifact = {}
 		self.version = version
 		self.system_root = system_root
-		self.user_list = user_list
+		self.profile_list = profile_list
 
 
 	def run(self) -> object:
-		self.artifact["Chrome"] = self.get_path_Chrome(self.user_list, self.version)
-		self.artifact["Firefox"] = self.get_path_Firefox(self.user_list, self.version)
-		self.artifact["Edge"] = self.get_path_Edge(self.user_list, self.version)
-		self.artifact["IE"] = self.get_path_IE(self.user_list, self.version)
-		self.artifact["Whale"] = self.get_path_Whale(self.user_list, self.version)
+		self.artifact["Chrome"] = self.get_path_Chrome(self.profile_list, self.version)
+		self.artifact["Firefox"] = self.get_path_Firefox(self.profile_list, self.version)
+		self.artifact["Edge"] = self.get_path_Edge(self.profile_list, self.version)
+		self.artifact["IE"] = self.get_path_IE(self.profile_list, self.version)
+		self.artifact["Whale"] = self.get_path_Whale(self.profile_list, self.version)
 
 		return self.artifact
 
 
-	def get_path_Chrome(self, user_list, version) -> object:
+	def get_path_Chrome(self, profile_list, version) -> object:
 		collected_path = {}
 		default_path = ""
 
-		for user in user_list:
-			name = user.split("\\")[-1]
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
 			collected_path[name+"."+"history"] = []
 			collected_path[name+"."+"cache"] = []
 			collected_path[name+"."+"cookie"] = []
@@ -43,9 +43,9 @@ class Browser_Config:
 		elif "Windows XP" in version:
 			default_path = "\\Local Settings\\Application Data\\"
 
-		for user in user_list:
-			name = user.split("\\")[-1]
-			sub_path = self.get_subpath_Chrome(user+default_path)
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
+			sub_path = self.get_subpath_Chrome(profile_path+default_path)
 
 			for key in sub_path.keys():
 				collected_path[name+"."+key] += sub_path[key]
@@ -89,11 +89,11 @@ class Browser_Config:
 		return collected_subpath
 
 
-	def get_path_Firefox(self, user_list, version) -> object:
+	def get_path_Firefox(self, profile_list, version) -> object:
 		collected_path = {}
 
-		for user in user_list:
-			name = user.split("\\")[-1]
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
 			collected_path[name+"."+"history"] = []
 			collected_path[name+"."+"cache"] = []
 			collected_path[name+"."+"cookie"] = []
@@ -112,9 +112,9 @@ class Browser_Config:
 			default_path_local = "\\Local Settings\\Local\\"
 			default_path_roaming = "\\AppData\\Roaming\\"
 
-		for user in user_list:
-			name = user.split("\\")[-1]
-			sub_path = self.get_subpath_Firefox(user+default_path_local, user+default_path_roaming)
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
+			sub_path = self.get_subpath_Firefox(profile_path+default_path_local, profile_path+default_path_roaming)
 
 			for key in sub_path.keys():
 				collected_path[name+"."+key] += sub_path[key]
@@ -170,11 +170,11 @@ class Browser_Config:
 		return collected_subpath
 
 
-	def get_path_Edge(self, user_list, version) -> object:
+	def get_path_Edge(self, profile_list, version) -> object:
 		collected_path = {}
 
-		for user in user_list:
-			name = user.split("\\")[-1]
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
 			collected_path[name+"."+"history"] = []
 			collected_path[name+"."+"cache"] = []
 			collected_path[name+"."+"cookie"] = []
@@ -189,9 +189,9 @@ class Browser_Config:
 		elif "Windows XP" in version:
 			return collected_path # not supported
 
-		for user in user_list:
-			name = user.split("\\")[-1]
-			sub_path = self.get_subpath_Edge(user+default_path)
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
+			sub_path = self.get_subpath_Edge(profile_path+default_path)
 
 			for key in sub_path.keys():
 				collected_path[name+"."+key] += sub_path[key]
@@ -235,10 +235,10 @@ class Browser_Config:
 		return collected_subpath
 
 
-	def get_path_IE(self, user_list, version) -> object:
+	def get_path_IE(self, profile_list, version) -> object:
 		collected_path = {}
 
-		for user in user_list:
+		for profile_path in profile_list:
 			name = user.split("\\")[-1]
 			collected_path[name+"."+"history"] = []
 			collected_path[name+"."+"cache"] = []
@@ -252,9 +252,9 @@ class Browser_Config:
 			default_path_local = "\\AppData\\Local\\Microsoft\\"
 			default_path_roaming = "\\AppData\\Roaming\\Microsoft\\"
 
-			for user in user_list:
-				name = user.split("\\")[-1]
-				sub_path = self.get_subpath_IE(user+default_path_local, user+default_path_roaming)
+			for profile_path in profile_list:
+				name = profile_path.split("\\")[-1]
+				sub_path = self.get_subpath_IE(profile_path+default_path_local, profile_path+default_path_roaming)
 
 				for key in sub_path.keys():
 					collected_path[name+"."+key] += sub_path[key]
@@ -262,9 +262,9 @@ class Browser_Config:
 		elif "Windows XP" in version:
 			default_path = "\\Local Settings\\"
 
-			for user in user_list:
-				name = user.split("\\")[-1]
-				sub_path = self.get_subpath_IE_XP(user+default_path)
+			for profile_path in profile_list:
+				name = profile_path.split("\\")[-1]
+				sub_path = self.get_subpath_IE_XP(profile_path+default_path)
 
 				for key in sub_path.keys():
 					collected_path[name+"."+key] += sub_path[key]
@@ -312,11 +312,11 @@ class Browser_Config:
 		return collected_subpath
 
 
-	def get_path_Whale(self, user_list, version) -> object:
+	def get_path_Whale(self, profile_list, version) -> object:
 		collected_path = {}
 
-		for user in user_list:
-			name = user.split("\\")[-1]
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
 			collected_path[name+"."+"history"] = []
 			collected_path[name+"."+"cache"] = []
 			collected_path[name+"."+"cookie"] = []
@@ -331,9 +331,9 @@ class Browser_Config:
 		elif "Windows XP" in version:
 			return collected_path # not supported
 
-		for user in user_list:
-			name = user.split("\\")[-1]
-			sub_path = self.get_subpath_Whale(user+default_path)
+		for profile_path in profile_list:
+			name = profile_path.split("\\")[-1]
+			sub_path = self.get_subpath_Whale(profile_path+default_path)
 
 			for key in sub_path.keys():
 				collected_path[name+"."+key] += sub_path[key]
