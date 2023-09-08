@@ -239,7 +239,7 @@ class Browser_Config:
 		collected_path = {}
 
 		for profile_path in profile_list:
-			name = user.split("\\")[-1]
+			name = profile_path.split("\\")[-1]
 			collected_path[name+"."+"history"] = []
 			collected_path[name+"."+"cache"] = []
 			collected_path[name+"."+"cookie"] = []
