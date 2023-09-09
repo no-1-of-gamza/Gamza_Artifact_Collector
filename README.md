@@ -45,15 +45,27 @@ python Gamza_Artifact_Collector.py
 ## Using Option
 Default Run is Collecting all of Artifacts data and save Artifacts file
 
+Choose the artifact section you want to collect -a option : all is default and system informatin is collected default all of option
 
-Choose the artifact section you want to collect -a option : all is default
--a i : i is system informatin
 -a t : t is trash bin data
 -a r : r is registry data
 -a e : e is event log
 -a b : b is browser history
+```python
+python Gamza_Artifact_Collector.py -a t
+``` 
+```python
+python Gamza_Artifact_Collector.py -a r e
+``` 
 
-Choose the -s option is Collecting specific extnsion files <.pdf, .txt, .xlsx >
-
+If you want to collect specific extension files, set -s <.extension>
+Choose the -s option is Collecting specific extnsion files <".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk">
+```python
+python Gamza_Artifact_Collector.py -s .pdf
+``` 
+```python
+python Gamza_Artifact_Collector.py -s txt .zip
+``` 
+*this option takes a lot of time*
 ---
 
