@@ -65,7 +65,6 @@ python Gamza_Artifact_Collector.py -s .pdf
 ``` 
 ```python
 python Gamza_Artifact_Collector.py -s txt .zip
-``` 
-*this option takes a lot of time*
----
+```
+*this option takes a lot of time, please wait and don't stop this program*
 
