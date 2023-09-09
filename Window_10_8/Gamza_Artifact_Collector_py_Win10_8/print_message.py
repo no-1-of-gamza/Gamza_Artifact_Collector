@@ -19,6 +19,6 @@ Choose the artifact section you want to collect -a option : all is default
 -a e : e is event log
 -a b : b is browser history
 
-You can search File Extension you want -s : doc, xls, txt, pdf, zip, exe, lnk
+You can search File Extension you want -f : doc, xls, txt, pdf, zip, exe, lnk
     """
     print(welcome_message)

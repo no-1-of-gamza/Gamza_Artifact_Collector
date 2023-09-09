@@ -2,12 +2,12 @@
 import print_message
 from option import option_set
 
-from Artifact.a_trash_bin_data import trashbin_data
-
+from Artifact.a_trash_bin_data import RecycleBin
 from Artifact.a_system_information import Systeminfo_Collector
 from Artifact.a_registry_data import Registry_config, Registry_Collector
 from Artifact.a_event_log import EventLog_Config, EventLog_Collector
 from Artifact.a_browser_history import Browser_Config, Browser_Collector
+from Artifact.a_extension import Extension
 
 from datetime import datetime
 import os
@@ -62,6 +62,36 @@ def Registry_Data(inspect_path,Window_version,profile_list,UTC):
         print(e)
         pass 
 
+def Trashbin_data(inspect_path,UTC):
+    try:
+        os.mkdir(f"{inspect_path}//Trash_bin")
+        Trashbin_result_path = str(inspect_path) + "\\Trash_bin"
+
+        artifact = RecycleBin(Trashbin_result_path, UTC)
+        artifact.check_drive()
+
+        artifact.collect()
+
+        pool = multiprocessing.Pool(processes=4)
+        pool.apply_async(artifact.dump)
+        print("trashbin..complete")
+        pool.close()
+        pool.join()
+    except Exception as e:
+        print(e)
+        pass 
+
+def Extension_files(inspect_path,UTC,target_extensions):
+    os.mkdir(f"{inspect_path}//Extension_file")
+    Trashbin_result_path = str(inspect_path) + "\\Extension_file"
+
+    Extension_files_artifact = Extension(Trashbin_result_path, UTC,target_extensions)
+    Extension_files_artifact.create_dir(Trashbin_result_path, Extension_files_artifact.drive_list)
+    Extension_files_artifact.collect()
+    pool = multiprocessing.Pool(processes=4)
+    pool.apply_async(Extension_files_artifact.dump)
+    pool.close()
+    pool.join()
 
 def main():
     try:
@@ -98,7 +128,7 @@ def main():
         os.mkdir(f"{inspect_path}")
 
         artifact = args.artifact
-        search_file = args.search
+        target_extensions = args.file
         # 시스템 정보 아티팩트 불러오기 (기본)
         system_information_collector = Systeminfo_Collector(inspect_path)
         system_information = system_information_collector.collect()
@@ -108,46 +138,39 @@ def main():
         InstallPath_system_root = system_information["InstallPath"]
         profile_list = system_information["UserProfile"]
 
+        print(args)
+
+        #프로그램 기본값 아티팩트 모두 수집
         if artifact is None:
-
-            Registry_Data(inspect_path,Window_version,profile_list,UTC)
             Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
-            Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)        
+            Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)
+            Registry_Data(inspect_path,Window_version,profile_list,UTC)
+            Trashbin_data(inspect_path,UTC)
 
-            # Trashbin_Data      
-            trashbin_data()
+        elif artifact:
+    
+            try:
+                if artifact.index("b"):
+                    Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
+                if artifact.index("e"):
+                    Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)  
+                if artifact.index("r"):
+                    Registry_Data(inspect_path,Window_version,profile_list,UTC)
+                if artifact.index("t"):
+                    Trashbin_data(inspect_path,UTC)
 
+            except Exception as e :
+                pass
 
-        elif artifact is True:
-            if "b" in artifact:
-                Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
-            if "e" in artifact:
-                Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)  
-            if "r" in artifact:
-                Registry_Data(inspect_path,Window_version,profile_list,UTC)
-            if "t" in artifact:
-                trashbin_data()
+        if target_extensions:
+            Extension_files(inspect_path, UTC, target_extensions)
+        
+        print("Success All Task")
+        input("엔터 키를 누르면 프로그램을 종료합니다.")
 
-        # Extension
-        if search_file is True:
-            if "doc" in search_file:
-                print("doc")
-            if "xls" in search_file:
-                print("xls")
-            if "txt" in search_file:
-                print("txt")
-            if "pdf" in search_file:
-                print("pdf")
-            if "zip" in search_file:
-                print("zip")
-            if "exe" in search_file:
-                print("exe")
-            if "lnk" in search_file:
-                print("lnk")
     except Exception as e:
         print("오류가 발생했습니다:")
         print(traceback.format_exc())
-        os.system('pause')
         input("엔터 키를 누르면 프로그램을 종료합니다.")
 
 if __name__ == "__main__":
