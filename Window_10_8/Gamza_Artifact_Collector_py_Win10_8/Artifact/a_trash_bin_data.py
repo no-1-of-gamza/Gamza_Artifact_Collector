@@ -112,14 +112,30 @@ class RecycleBin:
 
     def dump(self):
         if len(self.src) != len(self.dst):
-            print("다름")
+            print("src != dst")
         for src, dst in zip(self.src, self.dst):
             try: 
                 shutil.copyfile(src, dst)
             except OSError:
                 # 권한 오류가 난다면 해당 프로그램 사용
-                subprocess.run([r"C:\Users\ryues\OneDrive\바탕 화면\RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
 
+                # 현재 스크립트 파일의 디렉토리를 가져옴
+                script_dir = os.path.dirname(__file__)
+
+                # 상위 폴더로 이동하여 RawCopy.exe를 실행하려면 상위 폴더 경로를 만듦
+                parent_dir = os.path.join(script_dir, "..")
+
+                # RawCopy.exe를 상위 폴더에서 실행
+                rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
+
+                # 실행 명령
+                command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
+
+                # subprocess를 사용하여 실행
+                subprocess.run(command)
+
+
+                
     def get_file_info(self, file_path):
         stat = os.stat(file_path)
 

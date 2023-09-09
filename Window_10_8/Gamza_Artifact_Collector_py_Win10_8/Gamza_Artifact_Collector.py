@@ -25,7 +25,8 @@ def Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_
             Browser_artifact_path = Browser_config.run()
 
             Browser_collector = Browser_Collector(Browser_History_result_path, UTC)
-            Browser_collector.collect(Browser_artifact_path)        
+            Browser_collector.collect(Browser_artifact_path)   
+            print("browser history..complete")     
     except Exception as e:
         print(e)
         pass
@@ -42,6 +43,7 @@ def Event_log(inspect_path,Window_version,InstallPath_system_root,UTC):
 
             EventLog_collector = EventLog_Collector(Event_log_result_path, UTC)
             EventLog_collector.collect(EventLog_artifact_path)
+            print("event log..complete")
     except Exception as e:
         print(e)
         pass 
@@ -58,6 +60,7 @@ def Registry_Data(inspect_path,Window_version,profile_list,UTC):
 
             Register_collector = Registry_Collector(Register_result_path, UTC)
             Register_collector.collect(Resgister_artifact_path)
+            print("registry data..complete")
     except Exception as e:
         print(e)
         pass 
@@ -74,7 +77,7 @@ def Trashbin_data(inspect_path,UTC):
 
         pool = multiprocessing.Pool(processes=4)
         pool.apply_async(artifact.dump)
-        print("trashbin..complete")
+        print("trashbin data..complete")
         pool.close()
         pool.join()
     except Exception as e:
@@ -138,25 +141,45 @@ def main():
         InstallPath_system_root = system_information["InstallPath"]
         profile_list = system_information["UserProfile"]
 
-        print(args)
+        print("\nPlease Choose and Insert Option Collecting Artifact [1] or Collecting Specific Extension File [2]")
+        function_choice=input("Function:")
+
+        if function_choice == "":
+            print("All of Artifact Collecting...")
+            artifact = None
+
+        elif function_choice =="1":
+            artifact=[]
+            print("Insert Collecting Artifact you want")
+            input_artifact=input("artifact:")
+            artifact = input_artifact.split()
+            print(artifact)
+
+        elif function_choice =="2":
+            target_extensions=[]
+            print("Insert Collecting File you want")
+            target_extensions_input=input("File extension:")
+            target_extensions=target_extensions_input.split()
+            print(target_extensions)
 
         #프로그램 기본값 아티팩트 모두 수집
-        if artifact is None:
+        if artifact is None or artifact ==[]:
+            print("All of Artifact Collecting...")
             Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
             Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)
             Registry_Data(inspect_path,Window_version,profile_list,UTC)
             Trashbin_data(inspect_path,UTC)
 
         elif artifact:
-    
+
             try:
-                if artifact.index("b"):
+                if 'b' in artifact:
                     Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
-                if artifact.index("e"):
+                if 'e' in artifact:
                     Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)  
-                if artifact.index("r"):
+                if 'r' in artifact:
                     Registry_Data(inspect_path,Window_version,profile_list,UTC)
-                if artifact.index("t"):
+                if 't' in artifact:
                     Trashbin_data(inspect_path,UTC)
 
             except Exception as e :
