@@ -80,18 +80,22 @@ class Extension:
 
             self.create_summary(drive)
 
-    def dump(self, src_dst_tuple):
-        if len(self.src) != len(self.dst):
-            print("len is different")
-            src, dst = src_dst_tuple
-            try:
-                shutil.copyfile(src, dst)
-            except OSError:
-                script_dir = os.path.dirname(__file__)
-                parent_dir = os.path.join(script_dir, "..")
-                rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
-                command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
-                subprocess.run(command)
+    def dump(self, src_dst):
+        src=src_dst[0]
+        dst=src_dst[1]
+
+        print(src,dst)
+        #if len(self.src) != len(self.dst):
+        #    print("len is different")   
+        try:
+            script_dir = os.path.dirname(__file__)
+            parent_dir = os.path.join(script_dir, "..")
+            rawcopy_path = "RawCopy.exe"
+            command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
+            subprocess.run(command)
+        except Exception as e:
+            print(e)
+            #shutil.copyfile(src, dst)
 
     def get_file_info(self, file_path) -> list:
         if os.path.isfile(file_path):
