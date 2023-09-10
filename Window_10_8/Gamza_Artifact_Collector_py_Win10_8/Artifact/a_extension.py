@@ -83,7 +83,7 @@ class Extension:
     def dump(self, src_dst_tuple):
         if len(self.src) != len(self.dst):
             print("len is different")
-        src, dst = src_dst_tuple
+            src, dst = src_dst_tuple
             try:
                 shutil.copyfile(src, dst)
             except OSError:

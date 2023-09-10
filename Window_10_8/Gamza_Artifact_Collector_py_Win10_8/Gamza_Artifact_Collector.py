@@ -77,7 +77,7 @@ def Recycle_bin(inspect_path,UTC):
 
         pool = multiprocessing.Pool(processes=4)
         pool.apply_async(artifact.dump)
-        print("trashbin data..complete")
+        print("recycle bin data..complete")
         pool.close()
         pool.join()
     except Exception as e:
@@ -141,29 +141,8 @@ def main():
         InstallPath_system_root = system_information["InstallPath"]
         profile_list = system_information["UserProfile"]
 
-        print("\nPlease Choose and Insert Option Collecting Artifact [1] or Collecting Specific Extension File [2]")
-        function_choice=input("Function:")
-
-        if function_choice == "":
-            print("All of Artifact Collecting...")
-            artifact = None
-
-        elif function_choice =="1":
-            artifact=[]
-            print("Insert Collecting Artifact you want")
-            input_artifact=input("artifact:")
-            artifact = input_artifact.split()
-            print(artifact)
-
-        elif function_choice =="2":
-            target_extensions=[]
-            print("Insert Collecting File you want")
-            target_extensions_input=input("File extension:")
-            target_extensions=target_extensions_input.split()
-            print(target_extensions)
-
         #프로그램 기본값 아티팩트 모두 수집
-        if artifact is None or artifact ==[]:
+        if artifact is None and target_extensions is None:
             print("All of Artifact Collecting...")
             Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
             Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)
@@ -171,7 +150,6 @@ def main():
             Recycle_bin(inspect_path,UTC)
 
         elif artifact:
-
             try:
                 if 'b' in artifact:
                     Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)

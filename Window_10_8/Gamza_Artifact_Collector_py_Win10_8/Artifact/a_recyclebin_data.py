@@ -111,7 +111,7 @@ class RecycleBin:
     def dump(self, src_dst_tuple):
         if len(self.src) != len(self.dst):
             print("src != dst")
-       src, dst = src_dst_tuple
+            src, dst = src_dst_tuple
             try: 
                 shutil.copyfile(src, dst)
             except OSError:
