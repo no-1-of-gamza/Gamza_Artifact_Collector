@@ -8,7 +8,7 @@ Digital forensics is the process by which law enforcement agencies, companies, a
 
 It is used in various fields such as criminal investigation, in-house investigation, and data infringement investigation.
 
-Gamza_Artifact_Collector is that Collectng digital forensic artifact <systeminformation, registry files, event log, browser history, trash bin data>
+Gamza_Artifact_Collector is that Collectng digital forensic artifact <systeminformation, registry files, event log, browser history, recycle bin data>
 
 and Collecting specific extnsion files <.pdf, .txt, .xlsx > that usually is used mailcious code 
 
@@ -47,7 +47,7 @@ Default Run is Collecting all of Artifacts data and save Artifacts file
 
 Choose the artifact section you want to collect -a option : all is default and system informatin is collected default all of option
 
--a t : t is trash bin data
+-a t : t is recycle bin data
 -a r : r is registry data
 -a e : e is event log
 -a b : b is browser history
