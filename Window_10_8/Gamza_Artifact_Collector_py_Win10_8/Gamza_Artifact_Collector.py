@@ -84,6 +84,7 @@ def Recycle_bin(inspect_path,UTC):
         print(e)
         pass 
 
+
 def Extension_files(inspect_path,UTC,target_extensions):
     os.mkdir(f"{inspect_path}//Extension_file")
     Trashbin_result_path = str(inspect_path) + "\\Extension_file"
@@ -91,10 +92,10 @@ def Extension_files(inspect_path,UTC,target_extensions):
     Extension_files_artifact = Extension(Trashbin_result_path, UTC,target_extensions)
     Extension_files_artifact.create_dir(Trashbin_result_path, Extension_files_artifact.drive_list)
     Extension_files_artifact.collect()
-    pool = multiprocessing.Pool(processes=4)
-    pool.apply_async(Extension_files_artifact.dump)
-    pool.close()
-    pool.join()
+    with multiprocessing.Pool(processes=4) as pool:
+        pool.map(Extension_files_artifact.dump, Extension_files_artifact.src_dst)
+        
+    print("Extension_files..complete")
 
 def main():
     try:
