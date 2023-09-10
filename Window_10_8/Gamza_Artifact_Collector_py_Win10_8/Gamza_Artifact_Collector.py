@@ -2,7 +2,7 @@
 import print_message
 from option import option_set
 
-from Artifact.a_trash_bin_data import RecycleBin
+from Artifact.a_recyclebin_data import RecycleBin
 from Artifact.a_system_information import Systeminfo_Collector
 from Artifact.a_registry_data import Registry_config, Registry_Collector
 from Artifact.a_event_log import EventLog_Config, EventLog_Collector
@@ -65,7 +65,7 @@ def Registry_Data(inspect_path,Window_version,profile_list,UTC):
         print(e)
         pass 
 
-def Trashbin_data(inspect_path,UTC):
+def Recycle_bin(inspect_path,UTC):
     try:
         os.mkdir(f"{inspect_path}//Trash_bin")
         Trashbin_result_path = str(inspect_path) + "\\Trash_bin"
@@ -168,7 +168,7 @@ def main():
             Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
             Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)
             Registry_Data(inspect_path,Window_version,profile_list,UTC)
-            Trashbin_data(inspect_path,UTC)
+            Recycle_bin(inspect_path,UTC)
 
         elif artifact:
 
@@ -180,7 +180,7 @@ def main():
                 if 'r' in artifact:
                     Registry_Data(inspect_path,Window_version,profile_list,UTC)
                 if 't' in artifact:
-                    Trashbin_data(inspect_path,UTC)
+                    Recycle_bin(inspect_path,UTC)
 
             except Exception as e :
                 pass
