@@ -19,8 +19,7 @@ class RecycleBin:
 
         self.recyclebin_info = []
 
-        self.src = []
-        self.dst = []
+        self.src_dst = []
 
         self.none = []
         self.none_num = 0
@@ -98,22 +97,21 @@ class RecycleBin:
                 for file in files:
                     # dump list
                     src = os.path.join(root, file)
-                    self.src.append(src)
                     path = ""
                     for part in src.split("\\")[2:-1]:
                         path += (part + "\\")
                     dst = os.path.join(self.result_path, drive, path)
-                    self.dst.append(dst)
+                    self.src_dst.append((src, dst))
                     #print("src: "+src+"\ndst: "+dst+"\n")
                     
                     # get info
                     self.recyclebin_info.append(self.get_file_info(root+"\\"+file))
             self.create_summary(drive)
 
-    def dump(self):
+    def dump(self, src_dst_tuple):
         if len(self.src) != len(self.dst):
             print("src != dst")
-        for src, dst in zip(self.src, self.dst):
+       src, dst = src_dst_tuple
             try: 
                 shutil.copyfile(src, dst)
             except OSError:
@@ -182,8 +180,7 @@ if __name__ == "__main__":
 
     artifact.collect()
 
-    pool = multiprocessing.Pool(processes=4)
-    pool.apply_async(artifact.dump)
+    with multiprocessing.Pool(processes=4) as pool:
+        pool.map(artifact.dump, artifact.src_dst)
+
     print("완료")
-    pool.close()
-    pool.join()
