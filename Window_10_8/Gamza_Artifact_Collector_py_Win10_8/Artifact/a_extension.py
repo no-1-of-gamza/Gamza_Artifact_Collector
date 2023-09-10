@@ -15,8 +15,7 @@ class Extension:
         self.drive_list = []
         self.artifact_path = []
         self.extension_info = []
-        self.src = []
-        self.dst = []
+        self.src_dst = []
         self.none = []
         self.none_num = 0
 
@@ -69,8 +68,7 @@ class Extension:
                             target_dir = os.path.splitext(item)[1].replace(".", "")
                             src = item_path
                             dst = os.path.join(self.result_path, drive, target_dir)
-                            self.src.append(src)
-                            self.dst.append(dst)
+                            self.src_dst.append((src, dst))
 
                             # get info
                             file_info = self.get_file_info(item_path)
@@ -82,10 +80,10 @@ class Extension:
 
             self.create_summary(drive)
 
-    def dump(self):
+    def dump(self, src_dst_tuple):
         if len(self.src) != len(self.dst):
             print("len is different")
-        for src, dst in zip(self.src, self.dst):
+        src, dst = src_dst_tuple
             try:
                 shutil.copyfile(src, dst)
             except OSError:
@@ -150,10 +148,10 @@ def main():
     artifact.create_dir(result_path, artifact.drive_list)
     artifact.collect()
 
-    pool = multiprocessing.Pool(processes=4)
-    pool.apply_async(artifact.dump)
-    pool.close()
-    pool.join()
+    with multiprocessing.Pool(processes=4) as pool:
+        pool.map(artifact.dump, artifact.src_dst)
+
+    print("완료")
 
 if __name__ == "__main__":
     main()
