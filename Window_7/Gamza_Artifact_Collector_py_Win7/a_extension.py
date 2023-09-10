@@ -1,159 +1,95 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 import os
 import shutil
-import subprocess
-import multiprocessing
 from datetime import datetime, timedelta
-import argparse
+
 
 class Extension:
-    def __init__(self, result_path, UTC, target_extensions):
+    def __init__(self, result_path, UTC):
         self.result_path = result_path
         self.UTC = UTC
-        self.target_extensions = target_extensions
 
-        self.drive_list = []
-        self.artifact_path = []
+        self.artifact_path = ["C:\\Users\\ryues\\Downloads\\test"]
+        self.target_list = [".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk"]
+
         self.extension_info = []
-        self.src = []
-        self.dst = []
-        self.none = []
-        self.none_num = 0
 
-    # 드라이브 확인
-    def check_drive(self):
-        for drive_letter in range(65, 91):
-            drive = chr(drive_letter) + ":\\"
-            if os.path.exists(drive):
-                self.drive_list.append(chr(drive_letter))
-        return print("확인된 드라이브 목록:", self.drive_list, "\n")
+    # 경로를 입력 받을 것인지, 선택할 것인지 고민 (버전 별로 C, D 드라이브 경로는 동일 한 듯)
+    def get_artifact_path(self):
+        self.artifact_path[0] = input("덤프할 파일 경로를 입력하세요: ")
+        print("덤프 파일 경로: ", self.artifact_path)
 
-    # 폴더 생성
-    def create_dir(self, result_path, drive_list):
-        for drive in drive_list:
-            for target in self.target_extensions:
-                target = target.replace(".", "")
-                dir_path = os.path.join(self.result_path, drive, target)
-                if not os.path.exists(dir_path):
-                    try:
-                        os.makedirs(dir_path)
-                    except FileExistsError:
-                        pass
 
-    # 아티팩트 정보 수집
     def collect(self):
-        # 수집 환경 세팅
-        file_list = []
-        self.check_drive()
-        self.create_dir(self.result_path, self.drive_list)
+        self.get_artifact_path()
 
-        for drive in self.drive_list:
-            self.artifact_path = os.path.join(drive + ':\\')
-            dirs_to_check = [self.artifact_path]
-
-            while dirs_to_check:
-                current_dir = dirs_to_check.pop()
-                try:
-                    items = os.listdir(current_dir)
-                except PermissionError as e:
-                    # 액세스 거부된 디렉토리인 경우 무시
+        for path in self.artifact_path:
+            file_list = self.get_file_list(path)
+            for file_name in file_list:
+                if os.path.splitext(file_name)[1] not in self.target_list:
                     continue
+                
+                # dump
+                src = os.path.join(path, file_name)
+                dst = os.path.join(self.result_path, file_name)
+                shutil.copy2(src, dst)
+#                print("파일이 복사되었습니다.")
 
-                for item in items:
-                    item_path = os.path.join(current_dir, item)
-                    if os.path.isdir(item_path):
-                        dirs_to_check.append(item_path)
-                    elif os.path.isfile(item_path):
-                        if os.path.splitext(item)[1] in self.target_extensions:
-                            # dump list
-                            target_dir = os.path.splitext(item)[1].replace(".", "")
-                            src = item_path
-                            dst = os.path.join(self.result_path, drive, target_dir)
-                            self.src.append(src)
-                            self.dst.append(dst)
+                # get info
+                self.extension_info.append(self.get_file_info(path+"\\"+file_name))
+        
+        self.create_summary()
 
-                            # get info
-                            file_info = self.get_file_info(item_path)
-                            if file_info is None:
-                                self.none.append(item_path)
-                                self.extension_info.append(file_info)
-                            else:
-                                self.extension_info.append(file_info)
 
-            self.create_summary(drive)
+    def get_file_list(self, path) -> list:
+        dir_list = os.listdir(path)
+        file_list = [f for f in dir_list if os.path.isfile(path+'/'+f)]
+    
+        return file_list
 
-    def dump(self):
-        if len(self.src) != len(self.dst):
-            print("len is different")
-        for src, dst in zip(self.src, self.dst):
-            try:
-                shutil.copyfile(src, dst)
-            except OSError:
-                script_dir = os.path.dirname(__file__)
-                parent_dir = os.path.join(script_dir, "..")
-                rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
-                command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
-                subprocess.run(command)
 
     def get_file_info(self, file_path) -> list:
-        if os.path.isfile(file_path):
-            stat = os.stat(file_path)
-            name = file_path.split("\\")[-1]
-            mtime = self.timestamp_to_UTC(stat.st_mtime)
-            atime = self.timestamp_to_UTC(stat.st_atime)
-            ctime = self.timestamp_to_UTC(stat.st_ctime)
-            size = stat.st_size
+        stat = os.stat(file_path)
+        
+        name = file_path.split("\\")[-1]
+        mtime = self.timestamp_to_UTC(stat.st_mtime)
+        atime = self.timestamp_to_UTC(stat.st_atime)
+        ctime = self.timestamp_to_UTC(stat.st_ctime)
+        size = stat.st_size # byte 단위
 
-            info = [name, mtime, atime, ctime, size, file_path]
-            return info
+        info = [name, mtime, atime, ctime, size, file_path]
+        return info
+
 
     def timestamp_to_UTC(self, timestamp) -> datetime:
         utc_offset = timedelta(hours=int(self.UTC))
-        utc_modify = datetime.utcfromtimestamp(int(timestamp)) + utc_offset
+        utc_modify = datetime.utcfromtimestamp(int(timestamp))+utc_offset
+
         return utc_modify
 
-    def create_summary(self, drive):
+    # summary.txt
+    def create_summary(self):
         output = "Extension     UTC+{}\n".format(self.UTC)
         for path in self.artifact_path:
-            output += path
+            output += path+"\n"
         output += "\n\n"
 
+        # 여기서 filename에 해당하는 첫번째 15를 본인 아티팩트에서 나올 수 있는 최대 파일명 길이로 설정
         strFormat = '%-60s%-25s%-25s%-25s%-20s%s\n'
 
         title = ['File name', 'Modify time', 'Access time', 'Create time', 'File size(byte)', 'Path']
-        output += strFormat % (title[0], title[1], title[2], title[3], title[4], title[5])
+        output += strFormat %(title[0], title[1], title[2], title[3], title[4], title[5])
 
         for info in self.extension_info:
-            try:
-                output += strFormat % (info[0], info[1], info[2], info[3], info[4], info[5])
-            except TypeError:
-                if self.none_num < len(self.none):
-                    output += strFormat % (
-                        "파일 정보를 가져올 수 없습니다.", "", "", "", "", self.none[self.none_num])
-                    self.none_num += 1
+            output += strFormat %(info[0], info[1], info[2], info[3], info[4], info[5])
 
-        with open(self.result_path + '\\' + drive + '\summary.txt', 'w', encoding='utf-8') as f:
+        with open(self.result_path+'\summary.txt', 'w', encoding='utf-8') as f:
             f.write(output)
 
-        self.extension_info = []
-
-def main():
-    result_path = "C:\\Users\\ryues\\Downloads\\Collector\\Extension"
-    UTC = 9
-
-    parser = argparse.ArgumentParser(description="Artifact Collector")
-    parser.add_argument("--extensions", nargs="+", default=[".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk"],
-                        help="List of extensions to collect")
-    args = parser.parse_args()
-
-    artifact = Extension(result_path, UTC, args.extensions)
-    artifact.create_dir(result_path, artifact.drive_list)
-    artifact.collect()
-
-    pool = multiprocessing.Pool(processes=4)
-    pool.apply_async(artifact.dump)
-    pool.close()
-    pool.join()
 
 if __name__ == "__main__":
-    main()
+    result_path = "C:\\Users\\ryues\\Downloads\\Collector\\Extension"
+    
+    UTC = 9
+    artifact = Extension(result_path, UTC)
+    artifact.collect()
