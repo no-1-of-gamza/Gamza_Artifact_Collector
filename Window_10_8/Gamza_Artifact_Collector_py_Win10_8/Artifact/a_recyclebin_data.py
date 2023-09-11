@@ -46,6 +46,10 @@ class RecycleBin:
             self.artifact_path = ["C", ":\$Recycle.Bin"]
         elif "8" in self.version:
             self.artifact_path = ["C", ":\$Recycle.Bin"]
+        elif "8.1" in self.version:
+            self.artifact_path = ["C", ":\$Recycle.Bin"]
+        elif "6.3" in self.version:
+            self.artifact_path = ["C", ":\$Recycle.Bin"]
         elif "7" in self.version:
             self.artifact_path = ["C", ":\$Recycle.Bin"]
         elif "XP" in self.version:
