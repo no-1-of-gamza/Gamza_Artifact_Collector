@@ -1,10 +1,10 @@
 ----
-# Digital Fornsic Windows Artifact Collector
-### Window 10, 8, 7
+# Digital Forensic Windows Artifact Collector
+### Windows 10, 8, 7
 
 Digital forensic artifacts are evidence or information collected from a digital device.
 
-Digital forensics is the process by which law enforcement agencies, companies, and individuals collect and analyze legally important information in a digital environment. 
+Digital forensic is the process by which law enforcement agencies, companies, and individuals collect and analyze legally important information in a digital environment. 
 
 It is used in various fields such as criminal investigation, in-house investigation, and data infringement investigation.
 
