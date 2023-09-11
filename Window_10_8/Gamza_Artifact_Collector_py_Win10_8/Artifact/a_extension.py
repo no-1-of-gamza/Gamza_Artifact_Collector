@@ -30,7 +30,7 @@ class Extension:
         return print("확인된 드라이브 목록:", self.drive_list, "\n")
 
     # 폴더 생성
-    def create_dir(self, result_path, drive_list):
+    def create_dir(self, drive_list):
         for drive in drive_list:
             for target in self.target_list:
                 target = target.replace(".", "")
