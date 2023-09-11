@@ -28,9 +28,8 @@ class RecycleBin:
     def check_os(self):
         if platform.system() == "Windows":
             self.version = platform.version()
-            #print(f"현재 사용 중인 Windows 운영체제 버전은 {self.version} 입니다.")
         else:
-            print("현재 사용 중인 운영체제는 Windows가 아닙니다.")
+            print("The operating system you are currently using is not Windows.")
             sys.exit()
 
     # 드라이브 확인
@@ -39,7 +38,7 @@ class RecycleBin:
             drive = chr(drive_letter) + ":\\"
             if os.path.exists(drive):
                 self.drive_list.append(chr(drive_letter))
-        return print("확인된 드라이브 목록:", self.drive_list, "\n")
+        return print("Drives:", self.drive_list, "\n")
     
     # 버전 별, 아티팩트 경로
     def get_artifact_path(self):
@@ -52,7 +51,7 @@ class RecycleBin:
         elif "XP" in self.version:
             self.artifact_path = ["C", ":\Recycler"]
         else:
-            print("지원되지 않는 Windows 버전입니다.")
+            print("Unsupported version of Windows.")
             return None
         return self.artifact_path
 
@@ -66,22 +65,18 @@ class RecycleBin:
 
     # 아티팩트 수집
     def collect(self):
-        # 수집 환경 세팅
         self.check_os()
         self.artifact_path = self.get_artifact_path()
 
         if self.artifact_path is None:
-            return  # 지원되지 않는 버전이면 종료
+            return 
         
-        # 아티팩트 정보 수집 및 덤프
-        # 드라이브 별로 반복
+  
         for drive in self.drive_list:
             dir_path = os.path.join(self.result_path, drive)
             self.create_dir(dir_path)
 
-            # 드라이브 별로 summary를 작성하기 위해 빈 리스트로 초기화
             self.recyclebin_info = []
-            # sid 별로 반복
             for root, dirs, files in os.walk(drive+self.artifact_path[1]):
                 root_path_list = root.split("\\")
                 for dir in dirs:
@@ -89,7 +84,7 @@ class RecycleBin:
                     if (len(root_path_list)-1) == 1:
                         dir_path = os.path.join(self.result_path, drive, dir)
                     else:
-                        path = ""   # 빈 변수로 초기화
+                        path = ""  
                         for part in root_path_list[2:]:
                             path += (part + "\\")
                     dir_path = os.path.join(self.result_path, drive, path, dir)
@@ -113,8 +108,10 @@ class RecycleBin:
         try: 
             shutil.copyfile(src, dst)
         except OSError:
-            # 권한 오류가 난다면 해당 프로그램 사용
-            subprocess.run([r"C:\Users\ryues\OneDrive\바탕 화면\RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
+                current_script_directory = os.path.dirname(os.path.abspath(__file__))
+                dst = os.path.join(current_script_directory, "..")
+                
+                subprocess.run(["RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
 
     def get_file_info(self, file_path):
         stat = os.stat(file_path)
@@ -123,7 +120,7 @@ class RecycleBin:
         mtime = self.timestamp_to_UTC(stat.st_mtime)
         atime = self.timestamp_to_UTC(stat.st_atime)
         ctime = self.timestamp_to_UTC(stat.st_ctime)
-        size = stat.st_size  # byte 단위
+        size = stat.st_size 
 
         info = [name, mtime, atime, ctime, size, file_path]
         return info
@@ -146,23 +143,10 @@ class RecycleBin:
                 output += strFormat %(info[0], info[1], info[2], info[3], info[4], info[5])
             except TypeError:
                 if self.none_num < len(self.none):
-                    output += strFormat %("파일 정보를 가져올 수 없습니다.", "", "", "", "", self.none[self.none_num])
+                    output += strFormat %("Unable to get file information.", "", "", "", "", self.none[self.none_num])
                     #print("none 처리 완료")
                     self.none_num += 1
 
         with open(os.path.join(self.result_path, drive, 'summary.txt'), 'w', encoding='utf-8') as f:
             f.write(output)
 
-if __name__ == "__main__":
-    result_path = "C:\\Users\\ryues\\Downloads\\Collector\\RecycleBin"
-    UTC = 9
-
-    artifact = RecycleBin(result_path, UTC)
-    artifact.check_drive()
-
-    artifact.collect()
-
-    with multiprocessing.Pool(processes=4) as pool:
-        pool.map(artifact.dump, artifact.src_dst)
-
-    print("완료")

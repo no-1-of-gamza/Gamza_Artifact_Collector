@@ -27,7 +27,7 @@ class Extension:
             drive = chr(drive_letter) + ":\\"
             if os.path.exists(drive):
                 self.drive_list.append(chr(drive_letter))
-        return print("확인된 드라이브 목록:", self.drive_list, "\n")
+        return print("Drives:", self.drive_list, "\n")
 
     # 폴더 생성
     def create_dir(self, drive_list):
@@ -41,9 +41,9 @@ class Extension:
                     except FileExistsError:
                         pass
     
-    # 아티팩트 정보 수집
+ 
     def collect(self):
-        # 수집 환경 세팅
+        
         file_list = []
         self.check_drive()
         self.create_dir(self.result_path, self.drive_list)
@@ -80,8 +80,10 @@ class Extension:
             try: 
                 shutil.copyfile(src, dst)
             except OSError:
-                # 권한 오류가 난다면 해당 프로그램 사용
-                subprocess.run([r"C:\Users\ryues\OneDrive\바탕 화면\RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
+                current_script_directory = os.path.dirname(os.path.abspath(__file__))
+                dst = os.path.join(current_script_directory, "..")
+                
+                subprocess.run(["RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
 
     def get_file_info(self, file_path) -> list:
         if os.path.isfile(file_path):
@@ -91,7 +93,7 @@ class Extension:
             mtime = self.timestamp_to_UTC(stat.st_mtime)
             atime = self.timestamp_to_UTC(stat.st_atime)
             ctime = self.timestamp_to_UTC(stat.st_ctime)
-            size = stat.st_size # byte 단위
+            size = stat.st_size
 
             info = [name, mtime, atime, ctime, size, file_path]
 
@@ -111,7 +113,7 @@ class Extension:
             output += path
         output += "\n\n"
 
-        # 여기서 filename에 해당하는 첫번째 15를 본인 아티팩트에서 나올 수 있는 최대 파일명 길이로 설정
+        
         strFormat = '%-60s%-25s%-25s%-25s%-20s%s\n'
 
         title = ['File name', 'Modify time', 'Access time', 'Create time', 'File size(byte)', 'Path']
@@ -122,8 +124,8 @@ class Extension:
                 output += strFormat %(info[0], info[1], info[2], info[3], info[4], info[5])
             except TypeError:
                 if self.none_num < len(self.none):
-                    output += strFormat %("파일 정보를 가져올 수 없습니다.", "", "", "", "", self.none[self.none_num])
-                    #print("none 처리 완료")
+                    output += strFormat %("Unable to get file information.", "", "", "", "", self.none[self.none_num])
+                    
                     self.none_num += 1
         
         with open(self.result_path+'\\'+drive+'\summary.txt', 'w', encoding='utf-8') as f:
@@ -132,17 +134,3 @@ class Extension:
         self.extension_info = []
 
 
-if __name__ == "__main__":
-    # 감자 아티팩트 수집 도구 경로
-    result_path = "C:\\Users\\ryues\\Downloads\\Collector\\Extension"
-    
-    UTC = 9
-
-    artifact = Extension(result_path, UTC)
-    artifact.create_dir(result_path, artifact.drive_list)
-    artifact.collect()
-
-    with multiprocessing.Pool(processes=4) as pool:
-        pool.map(artifact.dump, artifact.src_dst)
-
-    print("완료")

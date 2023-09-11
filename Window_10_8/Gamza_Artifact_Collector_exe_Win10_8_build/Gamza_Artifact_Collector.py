@@ -2,12 +2,12 @@
 import print_message
 from option import option_set
 
-from a_recyclebin_data import RecycleBin
-from a_system_information import Systeminfo_Collector
-from a_registry_data import Registry_config, Registry_Collector
-from a_event_log import EventLog_Config, EventLog_Collector
-from a_browser_history import Browser_Config, Browser_Collector
-from a_extension import Extension
+from Artifact.a_recyclebin_data import RecycleBin
+from Artifact.a_system_information import Systeminfo_Collector
+from Artifact.a_registry_data import Registry_config, Registry_Collector
+from Artifact.a_event_log import EventLog_Config, EventLog_Collector
+from Artifact.a_browser_history import Browser_Config, Browser_Collector
+from Artifact.a_extension import Extension
 
 from datetime import datetime
 import os
