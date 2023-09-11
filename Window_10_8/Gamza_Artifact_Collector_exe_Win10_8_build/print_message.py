@@ -12,12 +12,12 @@ def print_welcome_message():
 
 Welcome to Gamza Artifact Collector!
 
-Choose the artifact section you want to collect -a option : all is default
--a t : t is recycle bin data
--a r : r is registry data
--a e : e is event log
--a b : b is browser history
+Choose the artifact section you want to collect [1] option : all is default
+t : t is recycle bin data
+r : r is registry data
+e : e is event log
+b : b is browser history
 
-You can search Specific Extension File you want -f : .doc, .xls, .txt, .pdf, .zip, .exe, .lnk
+You can search Specific Extension File you want [2] : .doc, .xls, .txt, .pdf, .zip, .exe, .lnk
     """
     print(welcome_message)
