@@ -87,7 +87,7 @@ class Extension:
         print(src, dst)
         try:
             script_dir = os.path.dirname(__file__)
-            parent_dir = os.path.join(script_dir, "..")
+            parent_dir = os.path.join(script_dir)
             rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
             command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
             subprocess.call(command)

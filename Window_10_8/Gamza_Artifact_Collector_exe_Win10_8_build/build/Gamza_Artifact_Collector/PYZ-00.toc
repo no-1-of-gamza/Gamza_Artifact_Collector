@@ -1,31 +1,6 @@
 ('C:\\Users\\kimg7\\OneDrive\\바탕 '
  '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\build\\Gamza_Artifact_Collector\\PYZ-00.pyz',
- [('Artifact', '-', 'PYMODULE'),
-  ('Artifact.a_browser_history',
-   'C:\\Users\\kimg7\\OneDrive\\바탕 '
-   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\Artifact\\a_browser_history.py',
-   'PYMODULE'),
-  ('Artifact.a_event_log',
-   'C:\\Users\\kimg7\\OneDrive\\바탕 '
-   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\Artifact\\a_event_log.py',
-   'PYMODULE'),
-  ('Artifact.a_extension',
-   'C:\\Users\\kimg7\\OneDrive\\바탕 '
-   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\Artifact\\a_extension.py',
-   'PYMODULE'),
-  ('Artifact.a_recyclebin_data',
-   'C:\\Users\\kimg7\\OneDrive\\바탕 '
-   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\Artifact\\a_recyclebin_data.py',
-   'PYMODULE'),
-  ('Artifact.a_registry_data',
-   'C:\\Users\\kimg7\\OneDrive\\바탕 '
-   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\Artifact\\a_registry_data.py',
-   'PYMODULE'),
-  ('Artifact.a_system_information',
-   'C:\\Users\\kimg7\\OneDrive\\바탕 '
-   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\Artifact\\a_system_information.py',
-   'PYMODULE'),
-  ('_compat_pickle',
+ [('_compat_pickle',
    'C:\\Users\\kimg7\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\_compat_pickle.py',
    'PYMODULE'),
   ('_compression',
@@ -42,6 +17,30 @@
    'PYMODULE'),
   ('_threading_local',
    'C:\\Users\\kimg7\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\_threading_local.py',
+   'PYMODULE'),
+  ('a_browser_history',
+   'C:\\Users\\kimg7\\OneDrive\\바탕 '
+   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\a_browser_history.py',
+   'PYMODULE'),
+  ('a_event_log',
+   'C:\\Users\\kimg7\\OneDrive\\바탕 '
+   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\a_event_log.py',
+   'PYMODULE'),
+  ('a_extension',
+   'C:\\Users\\kimg7\\OneDrive\\바탕 '
+   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\a_extension.py',
+   'PYMODULE'),
+  ('a_recyclebin_data',
+   'C:\\Users\\kimg7\\OneDrive\\바탕 '
+   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\a_recyclebin_data.py',
+   'PYMODULE'),
+  ('a_registry_data',
+   'C:\\Users\\kimg7\\OneDrive\\바탕 '
+   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\a_registry_data.py',
+   'PYMODULE'),
+  ('a_system_information',
+   'C:\\Users\\kimg7\\OneDrive\\바탕 '
+   '화면\\Gamza_Artifact\\Gamza_Artifact_Collector\\Window_10_8\\Gamza_Artifact_Collector_exe_Win10_8_build\\a_system_information.py',
    'PYMODULE'),
   ('argparse',
    'C:\\Users\\kimg7\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\argparse.py',

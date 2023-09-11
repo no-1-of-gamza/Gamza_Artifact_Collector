@@ -2,12 +2,12 @@
 import print_message
 from option import option_set
 
-from Artifact.a_recyclebin_data import RecycleBin
-from Artifact.a_system_information import Systeminfo_Collector
-from Artifact.a_registry_data import Registry_config, Registry_Collector
-from Artifact.a_event_log import EventLog_Config, EventLog_Collector
-from Artifact.a_browser_history import Browser_Config, Browser_Collector
-from Artifact.a_extension import Extension
+from a_recyclebin_data import RecycleBin
+from a_system_information import Systeminfo_Collector
+from a_registry_data import Registry_config, Registry_Collector
+from a_event_log import EventLog_Config, EventLog_Collector
+from a_browser_history import Browser_Config, Browser_Collector
+from a_extension import Extension
 
 from datetime import datetime
 import os
@@ -68,19 +68,17 @@ def Registry_Data(inspect_path, Window_version, profile_list, UTC):
 
 def Recycle_bin(inspect_path, UTC):
     try:
-        os.mkdir(f"{inspect_path}//Trash_bin")
-        Trashbin_result_path = str(inspect_path) + "\\Trash_bin"
+        os.mkdir(f"{inspect_path}//Recycle_bin")
+        Trashbin_result_path = str(inspect_path) + "\\Recycle_bin"
 
         artifact = RecycleBin(Trashbin_result_path, UTC)
         artifact.check_drive()
 
         artifact.collect()
-
-        pool = multiprocessing.Pool(processes=4)
-        pool.apply_async(artifact.dump)
+        with multiprocessing.Pool(processes=4) as pool:
+            pool.map(artifact.dump, artifact.src_dst)
         print("Recycle bin data...complete")
-        pool.close()
-        pool.join()
+
     except Exception as e:
         print(e)
         pass
