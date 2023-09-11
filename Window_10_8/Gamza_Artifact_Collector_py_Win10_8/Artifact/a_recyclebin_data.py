@@ -55,6 +55,8 @@ class RecycleBin:
             print("지원되지 않는 Windows 버전입니다.")
             return None
         return self.artifact_path
+    
+    
 
     # 폴더 생성
     def create_dir(self, dir_path):
@@ -108,29 +110,23 @@ class RecycleBin:
                     self.recyclebin_info.append(self.get_file_info(root+"\\"+file))
             self.create_summary(drive)
 
-    def dump(self, src_dst_tuple):
-        if len(self.src) != len(self.dst):
-            print("src != dst")
-            src, dst = src_dst_tuple
-            try: 
-                shutil.copyfile(src, dst)
-            except OSError:
-                # 권한 오류가 난다면 해당 프로그램 사용
+    def dump(self, src_dst):
+        #if len(self.src) != len(self.dst):
+        #    print("src != dst")
+        src=src_dst[0]
+        dst=src_dst[1]
+        
+        print(src,dst)
+        try:
+            script_dir = os.path.dirname(__file__)
+            parent_dir = os.path.join(script_dir, "..")
+            rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
+            command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
+            subprocess.run(command)
+        except Exception as e:
+            print(e)
+            #shutil.copyfile(src, dst)
 
-                # 현재 스크립트 파일의 디렉토리를 가져옴
-                script_dir = os.path.dirname(__file__)
-
-                # 상위 폴더로 이동하여 RawCopy.exe를 실행하려면 상위 폴더 경로를 만듦
-                parent_dir = os.path.join(script_dir, "..")
-
-                # RawCopy.exe를 상위 폴더에서 실행
-                rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
-
-                # 실행 명령
-                command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
-
-                # subprocess를 사용하여 실행
-                subprocess.run(command)
 
 
                 

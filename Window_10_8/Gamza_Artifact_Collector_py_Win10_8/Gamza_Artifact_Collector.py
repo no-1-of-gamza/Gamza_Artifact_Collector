@@ -67,19 +67,17 @@ def Registry_Data(inspect_path,Window_version,profile_list,UTC):
 
 def Recycle_bin(inspect_path,UTC):
     try:
-        os.mkdir(f"{inspect_path}//Trash_bin")
-        Trashbin_result_path = str(inspect_path) + "\\Trash_bin"
+        os.mkdir(f"{inspect_path}//Recycle_bin")
+        Trashbin_result_path = str(inspect_path) + "\\Recycle_bin"
 
         artifact = RecycleBin(Trashbin_result_path, UTC)
         artifact.check_drive()
 
         artifact.collect()
-
-        pool = multiprocessing.Pool(processes=4)
-        pool.apply_async(artifact.dump)
+        with multiprocessing.Pool(processes=4) as pool:
+            pool.map(artifact.dump, artifact.src_dst)
         print("recycle bin data..complete")
-        pool.close()
-        pool.join()
+    
     except Exception as e:
         print(e)
         pass 
