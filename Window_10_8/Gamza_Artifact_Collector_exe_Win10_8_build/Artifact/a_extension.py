@@ -19,15 +19,15 @@ class Extension:
         self.none = []
         self.none_num = 0
 
-    # 드라이브 확인
+    # Check drives
     def check_drive(self):
         for drive_letter in range(65, 91):
             drive = chr(drive_letter) + ":\\"
             if os.path.exists(drive):
                 self.drive_list.append(chr(drive_letter))
-        return print("확인된 드라이브 목록:", self.drive_list, "\n")
+        return print("List of confirmed drives:", self.drive_list, "\n")
 
-    # 폴더 생성
+    # Create folders
     def create_dir(self, result_path, drive_list):
         for drive in drive_list:
             for target in self.target_extensions:
@@ -39,9 +39,9 @@ class Extension:
                     except FileExistsError:
                         pass
 
-    # 아티팩트 정보 수집
+    # Collect artifact information
     def collect(self):
-        # 수집 환경 세팅
+        # Set up the collection environment
         file_list = []
         self.check_drive()
         self.create_dir(self.result_path, self.drive_list)
@@ -55,7 +55,7 @@ class Extension:
                 try:
                     items = os.listdir(current_dir)
                 except PermissionError as e:
-                    # 액세스 거부된 디렉토리인 경우 무시
+                    # Ignore directories with access denied
                     continue
 
                 for item in items:
@@ -64,13 +64,13 @@ class Extension:
                         dirs_to_check.append(item_path)
                     elif os.path.isfile(item_path):
                         if os.path.splitext(item)[1] in self.target_extensions:
-                            # dump list
+                            # Dump list
                             target_dir = os.path.splitext(item)[1].replace(".", "")
                             src = item_path
                             dst = os.path.join(self.result_path, drive, target_dir)
                             self.src_dst.append((src, dst))
 
-                            # get info
+                            # Get info
                             file_info = self.get_file_info(item_path)
                             if file_info is None:
                                 self.none.append(item_path)
@@ -131,7 +131,7 @@ class Extension:
             except TypeError:
                 if self.none_num < len(self.none):
                     output += strFormat % (
-                        "파일 정보를 가져올 수 없습니다.", "", "", "", "", self.none[self.none_num])
+                        "Unable to retrieve file information.", "", "", "", "", self.none[self.none_num])
                     self.none_num += 1
 
         with open(self.result_path + '\\' + drive + '\summary.txt', 'w', encoding='utf-8') as f:
@@ -155,7 +155,7 @@ def main():
     with multiprocessing.Pool(processes=4) as pool:
         pool.map(artifact.dump, artifact.src_dst)
 
-    print("완료")
+    print("Complete")
 
 if __name__ == "__main__":
     main()

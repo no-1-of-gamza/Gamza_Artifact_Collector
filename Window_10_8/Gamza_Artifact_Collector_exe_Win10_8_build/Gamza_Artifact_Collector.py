@@ -16,56 +16,57 @@ import multiprocessing
 import traceback
 
 
-def Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC):
+def Browser_History(inspect_path, Window_version, InstallPath_system_root, profile_list, UTC):
     try:
-            os.mkdir(f"{inspect_path}//Browser_History")
-            Browser_History_result_path = str(inspect_path) + "\\Browser_History"
+        os.mkdir(f"{inspect_path}//Browser_History")
+        Browser_History_result_path = str(inspect_path) + "\\Browser_History"
 
-            Browser_config = Browser_Config(Window_version, InstallPath_system_root, profile_list)
-            Browser_artifact_path = Browser_config.run()
+        Browser_config = Browser_Config(Window_version, InstallPath_system_root, profile_list)
+        Browser_artifact_path = Browser_config.run()
 
-            Browser_collector = Browser_Collector(Browser_History_result_path, UTC)
-            Browser_collector.collect(Browser_artifact_path)   
-            print("browser history..complete")     
+        Browser_collector = Browser_Collector(Browser_History_result_path, UTC)
+        Browser_collector.collect(Browser_artifact_path)
+        print("Browser history...complete")
     except Exception as e:
         print(e)
         pass
 
-def Event_log(inspect_path,Window_version,InstallPath_system_root,UTC):
+
+def Event_log(inspect_path, Window_version, InstallPath_system_root, UTC):
     try:
-           # Event_Log
-            os.mkdir(f"{inspect_path}//Event")
+        os.mkdir(f"{inspect_path}//Event")
 
-            Event_log_result_path = str(inspect_path) + "\\Event"
+        Event_log_result_path = str(inspect_path) + "\\Event"
 
-            EventLog_config = EventLog_Config(Window_version, InstallPath_system_root)
-            EventLog_artifact_path = EventLog_config.run()
+        EventLog_config = EventLog_Config(Window_version, InstallPath_system_root)
+        EventLog_artifact_path = EventLog_config.run()
 
-            EventLog_collector = EventLog_Collector(Event_log_result_path, UTC)
-            EventLog_collector.collect(EventLog_artifact_path)
-            print("event log..complete")
+        EventLog_collector = EventLog_Collector(Event_log_result_path, UTC)
+        EventLog_collector.collect(EventLog_artifact_path)
+        print("Event log...complete")
     except Exception as e:
         print(e)
-        pass 
+        pass
 
-def Registry_Data(inspect_path,Window_version,profile_list,UTC):
+
+def Registry_Data(inspect_path, Window_version, profile_list, UTC):
     try:
-            # Registry_Data
-            os.mkdir(f"{inspect_path}//Registry")
+        os.mkdir(f"{inspect_path}//Registry")
 
-            Register_result_path = str(inspect_path) + "\\Registry"
+        Register_result_path = str(inspect_path) + "\\Registry"
 
-            Register_config = Registry_config(Window_version, profile_list)
-            Resgister_artifact_path = Register_config.run()
+        Register_config = Registry_config(Window_version, profile_list)
+        Resgister_artifact_path = Register_config.run()
 
-            Register_collector = Registry_Collector(Register_result_path, UTC)
-            Register_collector.collect(Resgister_artifact_path)
-            print("registry data..complete")
+        Register_collector = Registry_Collector(Register_result_path, UTC)
+        Register_collector.collect(Resgister_artifact_path)
+        print("Registry data...complete")
     except Exception as e:
         print(e)
-        pass 
+        pass
 
-def Recycle_bin(inspect_path,UTC):
+
+def Recycle_bin(inspect_path, UTC):
     try:
         os.mkdir(f"{inspect_path}//Trash_bin")
         Trashbin_result_path = str(inspect_path) + "\\Trash_bin"
@@ -77,53 +78,55 @@ def Recycle_bin(inspect_path,UTC):
 
         pool = multiprocessing.Pool(processes=4)
         pool.apply_async(artifact.dump)
-        print("recycle bin data..complete")
+        print("Recycle bin data...complete")
         pool.close()
         pool.join()
     except Exception as e:
         print(e)
-        pass 
+        pass
 
-def Extension_files(inspect_path,UTC,target_extensions):
+
+def Extension_files(inspect_path, UTC, target_extensions):
     os.mkdir(f"{inspect_path}//Extension_file")
     Trashbin_result_path = str(inspect_path) + "\\Extension_file"
 
-    Extension_files_artifact = Extension(Trashbin_result_path, UTC,target_extensions)
+    Extension_files_artifact = Extension(Trashbin_result_path, UTC, target_extensions)
     Extension_files_artifact.create_dir(Trashbin_result_path, Extension_files_artifact.drive_list)
     Extension_files_artifact.collect()
     with multiprocessing.Pool(processes=4) as pool:
         pool.map(Extension_files_artifact.dump, Extension_files_artifact.src_dst)
-        
-    print("Extension_files..complete")
+
+    print("Extension files...complete")
+
 
 def main():
     try:
-        # 웰컴 메세지
+        # Welcome message
         print_message.print_welcome_message()
 
-        # 옵션 불러오기
+        # Load options
         args = option_set()
 
-        # 수사자, 사건 케이스 이름 입력
+        # Enter Inspector and Victim names
         print("\nPlease Insert Inspector name")
-        Inspector_name = input("Inspector_name: ")
-        Victim_name = input("Victim_name: ")
+        Inspector_name = input("Inspector name: ")
+        Victim_name = input("Victim name: ")
 
         if Inspector_name == "":
-            print("Ispector name is none")
+            print("Inspector name is none")
             Inspector_name = "unknown"
         if Victim_name == "":
             print("Victim name is none")
             Victim_name = "unknown"
 
-        # 현재 시간
+        # Current time
         date_time = datetime.today().strftime("%Y/%m/%d %H:%M:%S")
-        # 폴더 생성 시간
+        # Folder creation time
         date_time_save_folder = datetime.today().strftime("%Y_%m_%d_%H_%M_%S")
 
         print(f"Current Time: {date_time}")
 
-        # 폴더 생성
+        # Folder creation
         current_dir = os.getcwd()
         print(f"Made folder {current_dir}")
         print(f"Folder name: {date_time_save_folder}_{Inspector_name}_{Victim_name}")
@@ -132,7 +135,7 @@ def main():
 
         artifact = args.artifact
         target_extensions = args.file
-        # 시스템 정보 아티팩트 불러오기 (기본)
+        # Collect system information artifact (default)
         system_information_collector = Systeminfo_Collector(inspect_path)
         system_information = system_information_collector.collect()
 
@@ -142,62 +145,62 @@ def main():
         profile_list = system_information["UserProfile"]
 
         print("\nPlease Choose and Insert Option Collecting Artifact [1] or Collecting Specific Extension File [2]")
-        function_choice=input("Function:")
+        function_choice = input("Function:")
 
         if function_choice == "":
             print("All of Artifact Collecting...")
             artifact = None
 
-        elif function_choice =="1":
-            artifact=[]
+        elif function_choice == "1":
+            artifact = []
             print("Insert Collecting Artifact you want")
-            input_artifact=input("artifact:")
+            input_artifact = input("Artifact: ")
             artifact = input_artifact.split()
             print(artifact)
 
-        elif function_choice =="2":
-            target_extensions=[]
+        elif function_choice == "2":
+            target_extensions = []
             print("Insert Collecting File you want")
-            target_extensions_input=input("File extension:")
-            target_extensions=target_extensions_input.split()
+            target_extensions_input = input("File extension: ")
+            target_extensions = target_extensions_input.split()
             print(target_extensions)
-            if target_extensions == [] :
+            if not target_extensions:
                 print("No file extension entered")
-            
 
-        #프로그램 기본값 아티팩트 모두 수집
-        if (artifact is None or artifact ==[])and target_extensions is None:
+        # Collect all default artifacts if no specific options are provided
+        if (artifact is None or not artifact) and target_extensions is None:
             print("All of Artifact Collecting...")
-            Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
-            Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)
-            Registry_Data(inspect_path,Window_version,profile_list,UTC)
-            Recycle_bin(inspect_path,UTC)
+            Browser_History(inspect_path, Window_version, InstallPath_system_root, profile_list, UTC)
+            Event_log(inspect_path, Window_version, InstallPath_system_root, UTC)
+            Registry_Data(inspect_path, Window_version, profile_list, UTC)
+            Recycle_bin(inspect_path, UTC)
 
         elif artifact:
 
             try:
                 if 'b' in artifact:
-                    Browser_History(inspect_path,Window_version,InstallPath_system_root,profile_list,UTC)
+                    Browser_History(inspect_path, Window_version, InstallPath_system_root, profile_list, UTC)
                 if 'e' in artifact:
-                    Event_log(inspect_path,Window_version,InstallPath_system_root,UTC)  
+                    Event_log(inspect_path, Window_version, InstallPath_system_root, UTC)
                 if 'r' in artifact:
-                    Registry_Data(inspect_path,Window_version,profile_list,UTC)
+                    Registry_Data(inspect_path, Window_version, profile_list, UTC)
                 if 't' in artifact:
-                    Recycle_bin(inspect_path,UTC)
+                    Recycle_bin(inspect_path, UTC)
 
-            except Exception as e :
+            except Exception as e:
                 pass
 
         if target_extensions:
             Extension_files(inspect_path, UTC, target_extensions)
-        
+
         print("Success All Task")
-        input("엔터 키를 누르면 프로그램을 종료합니다.")
+        input("Press Enter to exit the program.")
 
     except Exception as e:
-        print("오류가 발생했습니다:")
+        print("An error occurred:")
         print(traceback.format_exc())
-        input("엔터 키를 누르면 프로그램을 종료합니다.")
+        input("Press Enter to exit the program.")
+
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()

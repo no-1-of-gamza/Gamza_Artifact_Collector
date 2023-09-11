@@ -6,6 +6,6 @@ def option_set():
     parser.add_argument("-f","--file",nargs="+", help="Search Specific Extension File:")
 
     '''
-    기본 사용법: python Gamza_Artifact_Collector.py 
+    python Gamza_Artifact_Collector.py 
     '''
     return parser.parse_args()
