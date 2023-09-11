@@ -105,13 +105,12 @@ class RecycleBin:
 
     def dump(self, src_dst_tuple):
         src, dst = src_dst_tuple
-        try: 
-            shutil.copyfile(src, dst)
+        try:
+            current_script_directory = os.path.dirname(__file__)
+            dst_run = os.path.join(current_script_directory, "..")        
+            subprocess.run(["RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst_run])
         except OSError:
-                current_script_directory = os.path.dirname(os.path.abspath(__file__))
-                dst = os.path.join(current_script_directory, "..")
-                
-                subprocess.run(["RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
+            shutil.copyfile(src, dst)
 
     def get_file_info(self, file_path):
         stat = os.stat(file_path)

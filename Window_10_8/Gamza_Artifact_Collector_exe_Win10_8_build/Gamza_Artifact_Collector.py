@@ -86,10 +86,10 @@ def Recycle_bin(inspect_path, UTC):
 
 def Extension_files(inspect_path, UTC, target_extensions):
     os.mkdir(f"{inspect_path}//Extension_file")
-    Trashbin_result_path = str(inspect_path) + "\\Extension_file"
+    Extension_files_result_path = str(inspect_path) + "\\Extension_file"
 
-    Extension_files_artifact = Extension(Trashbin_result_path, UTC, target_extensions)
-    Extension_files_artifact.create_dir(Trashbin_result_path, Extension_files_artifact.drive_list)
+    Extension_files_artifact = Extension(Extension_files_result_path, UTC, target_extensions)
+    Extension_files_artifact.create_dir(Extension_files_artifact.drive_list)
     Extension_files_artifact.collect()
     with multiprocessing.Pool(processes=4) as pool:
         pool.map(Extension_files_artifact.dump, Extension_files_artifact.src_dst)
@@ -131,8 +131,6 @@ def main():
         inspect_path = f"{date_time_save_folder}_{Inspector_name}_{Victim_name}"
         os.mkdir(f"{inspect_path}")
 
-        artifact = args.artifact
-        target_extensions = args.file
         # Collect system information artifact (default)
         system_information_collector = Systeminfo_Collector(inspect_path)
         system_information = system_information_collector.collect()
@@ -144,20 +142,22 @@ def main():
 
         print("\nPlease Choose and Insert Option Collecting Artifact [1] or Collecting Specific Extension File [2]")
         function_choice = input("Function:")
+        artifact = []
+        target_extensions = []
 
         if function_choice == "":
             print("All of Artifact Collecting...")
             artifact = None
 
         elif function_choice == "1":
-            artifact = []
+            
             print("Insert Collecting Artifact you want")
             input_artifact = input("Artifact: ")
             artifact = input_artifact.split()
             print(artifact)
 
         elif function_choice == "2":
-            target_extensions = []
+            
             print("Insert Collecting File you want")
             target_extensions_input = input("File extension: ")
             target_extensions = target_extensions_input.split()
@@ -166,7 +166,7 @@ def main():
                 print("No file extension entered")
 
         # Collect all default artifacts if no specific options are provided
-        if (artifact is None or not artifact) and target_extensions is None:
+        if (artifact is None or artifact==[]) and (target_extensions ==[] or target_extensions is None):
             print("All of Artifact Collecting...")
             Browser_History(inspect_path, Window_version, InstallPath_system_root, profile_list, UTC)
             Event_log(inspect_path, Window_version, InstallPath_system_root, UTC)

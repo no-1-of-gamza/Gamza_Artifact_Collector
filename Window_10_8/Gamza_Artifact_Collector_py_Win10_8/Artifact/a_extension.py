@@ -6,14 +6,14 @@ from datetime import datetime, timedelta
 
 
 class Extension:
-    def __init__(self, result_path, UTC):
+    def __init__(self, result_path, UTC, target_extensions):
         self.result_path = result_path
         self.UTC = UTC
 
         self.drive_list = []
         self.artifact_path = []
-        self.target_list = [".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk"]
-
+        #self.target_list = [".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk"]
+        self.target_list=target_extensions
         self.extension_info = []
 
         self.src_dst = []
@@ -46,44 +46,48 @@ class Extension:
         
         file_list = []
         self.check_drive()
-        self.create_dir(self.result_path, self.drive_list)
+        self.create_dir(self.drive_list)
+
 
         for drive in self.drive_list:
-            self.artifact_path = os.path.join(drive + ':\\')
-            for root, _, files in os.walk(self.artifact_path):
-                file_list.append(files)
-                for file_name in files:
-                    if os.path.splitext(file_name)[1] not in self.target_list:
-                        continue
-                
-                    # dump list
-                    target_dir = os.path.splitext(file_name)[1].replace(".", "")
-                    src = os.path.join(root, file_name)
-                    dst = os.path.join(self.result_path, drive, target_dir)
-                    self.src_dst.append((src, dst))
-                    #print("src: "+src+"\ndst: "+dst+"\n")
+            try:
+                self.artifact_path = os.path.join(drive + ':\\')
+                for root, _, files in os.walk(self.artifact_path):
+                    file_list.append(files)
+                    for file_name in files:
+                        if os.path.splitext(file_name)[1] not in self.target_list:
+                            continue
+                    
+                        # dump list
+                        target_dir = os.path.splitext(file_name)[1].replace(".", "")
+                        src = os.path.join(root, file_name)
+                        dst = os.path.join(self.result_path, drive, target_dir)
+                        self.src_dst.append((src, dst))
+                        #print("src: "+src+"\ndst: "+dst+"\n")
 
-                    # get info
-                    file_info = self.get_file_info(root+"\\"+file_name)
-                    if file_info is None:
-                        self.none.append(root+"\\"+file_name)
-                        self.extension_info.append(file_info)
-                        #print(root+"\\"+file_name)
-                        #print(self.get_file_info(root+"\\"+file_name))
-                    else:
-                        self.extension_info.append(file_info)
+                        # get info
+                        file_info = self.get_file_info(root+"\\"+file_name)
+                        if file_info is None:
+                            self.none.append(root+"\\"+file_name)
+                            self.extension_info.append(file_info)
+                            #print(root+"\\"+file_name)
+                            #print(self.get_file_info(root+"\\"+file_name))
+                        else:
+                            self.extension_info.append(file_info)
+            except Exception as e:
+                pass
 
             self.create_summary(drive)
 
     def dump(self, src_dst_tuple):
             src, dst = src_dst_tuple
-            try: 
-                shutil.copyfile(src, dst)
-            except OSError:
-                current_script_directory = os.path.dirname(os.path.abspath(__file__))
-                dst = os.path.join(current_script_directory, "..")
-                
+            try:
+                current_script_directory = os.path.dirname(__file__)         
                 subprocess.run(["RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
+                
+            except OSError:
+                shutil.copyfile(src, dst)
+
 
     def get_file_info(self, file_path) -> list:
         if os.path.isfile(file_path):
