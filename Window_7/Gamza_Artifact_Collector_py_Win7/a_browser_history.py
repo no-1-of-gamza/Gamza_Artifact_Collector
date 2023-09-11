@@ -4,27 +4,28 @@ import shutil
 import subprocess
 
 class Browser_Config:
-    def __init__(self, version, system_root, user_list):
+    def __init__(self, version, system_root, profile_list, IE_version):
         self.artifact = {}
         self.version = version
         self.system_root = system_root
-        self.user_list = user_list
+        self.profile_list = profile_list
+        self.IE_version = IE_version
 
     def run(self):
-        self.artifact["Chrome"] = self.get_path_Chrome(self.user_list, self.version)
-        self.artifact["Firefox"] = self.get_path_Firefox(self.user_list, self.version)
-        self.artifact["Edge"] = self.get_path_Edge(self.user_list, self.version)
-        self.artifact["IE"] = self.get_path_IE(self.user_list, self.version)
-        self.artifact["Whale"] = self.get_path_Whale(self.user_list, self.version)
+        self.artifact["Chrome"] = self.get_path_Chrome(self.profile_list, self.version)
+        self.artifact["Firefox"] = self.get_path_Firefox(self.profile_list, self.version)
+        self.artifact["Edge"] = self.get_path_Edge(self.profile_list, self.version)
+        # self.artifact["IE"] = self.get_path_IE(self.profile_list, self.version, self.IE_version)
+        self.artifact["Whale"] = self.get_path_Whale(self.profile_list, self.version)
 
         return self.artifact
 
-    def get_path_Chrome(self, user_list, version):
+    def get_path_Chrome(self, profile_list, version):
         collected_path = {}
         default_path = ""
 
-        for user in user_list:
-            name = user.split("\\")[-1]
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
             collected_path[name + "." + "history"] = []
             collected_path[name + "." + "cache"] = []
             collected_path[name + "." + "cookie"] = []
@@ -39,9 +40,9 @@ class Browser_Config:
         elif "Windows XP" in version:
             default_path = "\\Local Settings\\Application Data\\"
 
-        for user in user_list:
-            name = user.split("\\")[-1]
-            sub_path = self.get_subpath_Chrome(user + default_path)
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
+            sub_path = self.get_subpath_Chrome(profile_path + default_path)
 
             for key in sub_path.keys():
                 collected_path[name + "." + key] += sub_path[key]
@@ -83,11 +84,11 @@ class Browser_Config:
 
         return collected_subpath
 
-    def get_path_Firefox(self, user_list, version):
+    def get_path_Firefox(self, profile_list, version):
         collected_path = {}
 
-        for user in user_list:
-            name = user.split("\\")[-1]
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
             collected_path[name + "." + "history"] = []
             collected_path[name + "." + "cache"] = []
             collected_path[name + "." + "cookie"] = []
@@ -106,9 +107,9 @@ class Browser_Config:
             default_path_local = "\\Local Settings\\Local\\"
             default_path_roaming = "\\AppData\\Roaming\\"
 
-        for user in user_list:
-            name = user.split("\\")[-1]
-            sub_path = self.get_subpath_Firefox(user + default_path_local, user + default_path_roaming)
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
+            sub_path = self.get_subpath_Firefox(profile_path + default_path_local, profile_path + default_path_roaming)
 
             for key in sub_path.keys():
                 collected_path[name + "." + key] += sub_path[key]
@@ -123,19 +124,11 @@ class Browser_Config:
         collected_subpath["cookie"] = []
         collected_subpath["download"] = []
 
-        dir_list = os.listdir(path_local)
-        for item_name in dir_list:
-            if item_name == "Mozilla" and os.path.isdir(path_local + item_name):
-                path_local += item_name + "\\"
-                path_roaming += item_name + "\\"
-                break
+        if not os.path.exists(path_local+"\\Mozilla\\Firefox\\Profiles\\"):
+            return collected_subpath
 
-        dir_list = os.listdir(path_local)
-        for item_name in dir_list:
-            if item_name == "Firefox" and os.path.isdir(path_local + item_name):
-                path_local += item_name + "\\Profiles\\"
-                path_roaming += item_name + "\\Profiles\\"
-                break
+        path_local += "\\Mozilla\\Firefox\\Profiles\\"
+        path_roaming += "\\Mozilla\\Firefox\\Profiles\\"
 
         dir_list = os.listdir(path_local)
         for profile in dir_list:
@@ -146,11 +139,8 @@ class Browser_Config:
                 sub_path_roaming + "\\places.sqlite"
             ]
             collected_subpath["cache"] += [
-                sub_path_local + "\\cache2\\doomed",
-                sub_path_local + "\\cache2\\entries",
-                sub_path_local + "\\cache2\\index",
-                sub_path_local + "\\cache2\\index.txt"
-            ]
+				sub_path_local+"\\cache2"
+			]
             collected_subpath["cookie"] += [
                 sub_path_roaming + "\\cookies.sqlite"
             ]
@@ -162,11 +152,11 @@ class Browser_Config:
 
         return collected_subpath
 
-    def get_path_Edge(self, user_list, version):
+    def get_path_Edge(self, profile_list, version):
         collected_path = {}
 
-        for user in user_list:
-            name = user.split("\\")[-1]
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
             collected_path[name + "." + "history"] = []
             collected_path[name + "." + "cache"] = []
             collected_path[name + "." + "cookie"] = []
@@ -179,11 +169,11 @@ class Browser_Config:
         elif "Windows 7" in version:
             default_path = "\\AppData\\Local\\"
         elif "Windows XP" in version:
-            return collected_path
+            return collected_path # not supported
 
-        for user in user_list:
-            name = user.split("\\")[-1]
-            sub_path = self.get_subpath_Edge(user + default_path)
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
+            sub_path = self.get_subpath_Edge(profile_path + default_path)
 
             for key in sub_path.keys():
                 collected_path[name + "." + key] += sub_path[key]
@@ -225,84 +215,95 @@ class Browser_Config:
 
         return collected_subpath
 
-    def get_path_IE(self, user_list, version):
+    def get_path_IE(self, profile_list, os_version, IE_version):
         collected_path = {}
 
-        for user in user_list:
-            name = user.split("\\")[-1]
-            collected_path[name + "." + "history"] = []
-            collected_path[name + "." + "cache"] = []
-            collected_path[name + "." + "cookie"] = []
-            collected_path[name + "." + "download"] = []
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
+            collected_path[name+"."+"history"] = []
+            collected_path[name+"."+"cache"] = []
+            collected_path[name+"."+"cookie"] = []
+            collected_path[name+"."+"download"] = []
 
-        if "Windows 10" in version:
-            return collected_path
-        elif ("Windows 8" in version) or ("Windows 7" in version):
+        if "Windows 10" in os_version:
+            return collected_path # not supported
+
+        elif ("Windows 8" in os_version) or ("Windows 7" in os_version):
             default_path_local = "\\AppData\\Local\\Microsoft\\"
             default_path_roaming = "\\AppData\\Roaming\\Microsoft\\"
 
-            for user in user_list:
-                name = user.split("\\")[-1]
-                sub_path = self.get_subpath_IE(user + default_path_local, user + default_path_roaming)
+            for profile_path in profile_list:
+                name = profile_path.split("\\")[-1]
+                sub_path = self.get_subpath_IE(profile_path+default_path_local, profile_path+default_path_roaming, IE_version)
 
                 for key in sub_path.keys():
-                    collected_path[name + "." + key] += sub_path[key]
+                    collected_path[name+"."+key] += sub_path[key]
 
-        elif "Windows XP" in version:
+        elif "Windows XP" in os_version:
             default_path = "\\Local Settings\\"
 
-            for user in user_list:
-                name = user.split("\\")[-1]
-                sub_path = self.get_subpath_IE_XP(user + default_path)
+            for profile_path in profile_list:
+                name = profile_path.split("\\")[-1]
+                sub_path = self.get_subpath_IE_XP(profile_path+default_path, IE_version)
 
                 for key in sub_path.keys():
-                    collected_path[name + "." + key] += sub_path[key]
+                    collected_path[name+"."+key] += sub_path[key]
 
         return collected_path
 
-    def get_subpath_IE(self, path_local, path_roaming):
+    def get_subpath_IE(self, path_local, path_roaming, IE_version):
         collected_subpath = {}
 
-        collected_subpath["history"] = [
-            path_local + "Windows\\History\\"
-        ]
-        collected_subpath["cache"] = [
-            path_local + "Windows\\Temporary Internet Files\\"
-        ]
-        collected_subpath["cookie"] = [
-            path_roaming + "Windows\\Cookies\\"
-        ]
-        collected_subpath["download"] = [
-            path_roaming + "Internet Explorer\\DownloadHistory\\"
-        ]
+        if int(IE_version.split(".")[0]) >= 10:
+            collected_subpath["history"] = [
+            path_local+"Windows\\WebCache"
+			]
+        else:
+            collected_subpath["history"] = [
+				path_local+"Windows\\History\\History.IE5"
+			]
+            collected_subpath["cache"] = [
+				path_local+"Windows\\Temporary Internet Files\\History.IE5"
+			]
+            collected_subpath["cookie"] = [
+				path_roaming+"Windows\\Cookies"
+			]
+            collected_subpath["download"] = [
+				path_roaming+"Windows\\IEDownloadHistory"
+			]
 
         collected_subpath = self.path_validation_check(collected_subpath)
 
         return collected_subpath
 
-    def get_subpath_IE_XP(self, path):
+    def get_subpath_IE_XP(self, path, IE_version):
         collected_subpath = {}
 
-        collected_subpath["history"] = [
-            path + "History\\"
-        ]
-        collected_subpath["cache"] = [
-            path + "Temporary Internet Files\\"
-        ]
-        collected_subpath["cookie"] = [
-            path + "Cookies\\"
-        ]
-        collected_subpath["download"] = []
+        if int(IE_version.split(".")[0]) >= 10:
+            collected_subpath["history"] = [
+                path+"Windows\\WebCache"
+			]
+        else:
+            collected_subpath["history"] = [
+				path+"History\\History.IE5"
+			]
+            collected_subpath["cache"] = [
+				path+"Temporary Internet Files"
+			]
+            collected_subpath["cookie"] = [
+				path+"Cookies"
+			]
+            collected_subpath["download"] = []
 
         collected_subpath = self.path_validation_check(collected_subpath)
-
+        
         return collected_subpath
 
-    def get_path_Whale(self, user_list, version):
+    def get_path_Whale(self, profile_list, version):
         collected_path = {}
 
-        for user in user_list:
-            name = user.split("\\")[-1]
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
             collected_path[name + "." + "history"] = []
             collected_path[name + "." + "cache"] = []
             collected_path[name + "." + "cookie"] = []
@@ -315,11 +316,11 @@ class Browser_Config:
         elif "Windows 7" in version:
             default_path = "\\AppData\\Local\\"
         elif "Windows XP" in version:
-            return collected_path
+            return collected_path # not supported
 
-        for user in user_list:
-            name = user.split("\\")[-1]
-            sub_path = self.get_subpath_Whale(user + default_path)
+        for profile_path in profile_list:
+            name = profile_path.split("\\")[-1]
+            sub_path = self.get_subpath_Whale(profile_path + default_path)
 
             for key in sub_path.keys():
                 collected_path[name + "." + key] += sub_path[key]
@@ -388,7 +389,7 @@ class Browser_Collector:
         dump_list = []
 
         for browser_name in artifact_path.keys():
-            browser_path = self.result_path + "\\" + browser_name
+            browser_path = self.result_path+"\\"+browser_name
             self.mkdir(browser_path)
 
             browser_artifact = artifact_path[browser_name]
@@ -396,17 +397,14 @@ class Browser_Collector:
                 if browser_artifact[artifact_name] == []:
                     continue
 
-                artifact_subpath = browser_path + "\\" + artifact_name
+                artifact_subpath = browser_path+"\\"+artifact_name
                 self.mkdir(artifact_subpath)
-
+				
                 for path in browser_artifact[artifact_name]:
                     self.collected_info.append([browser_name] + self.get_file_info(path))
                     file_name = path.split("\\")[-1]
 
-                    if artifact_name.split(".")[-1] == "cache":
-                        dump_list.append([path, artifact_subpath + "\\" + file_name])
-                    else:
-                        dump_list.append([path, artifact_subpath + "\\" + file_name])
+                    dump_list.append([path, artifact_subpath+"\\"+file_name])
 
         return dump_list
 
@@ -439,23 +437,14 @@ class Browser_Collector:
             self.dump(dump_path[0], dump_path[1])
 
     def dump(self, src_path, dst_path):
-        worker_list = ["doomed", "entries", "index.txt", "index", "data_0", "data_1", "data_2", "data_3"]
-
         try:
             if os.path.isfile(src_path):
-                if src_path.split("\\")[-1] not in worker_list:
-                    shutil.copy2(src_path, dst_path)
-                else:
-                    self.dump_worker(src_path, "\\".join(dst_path.split("\\")[:-1]))
+                self.dump_worker(src_path, dst_path)
             else:
                 item_list = self.search_directory(src_path, dst_path)
 
                 for item in item_list:
-                    if item[0].split("\\")[-1] not in worker_list:
-                        shutil.copy2(item[0], item[1])
-                    else:
-                        print(item[0])
-                        self.dump_worker(item[0], "\\".join(item[1].split("\\")[:-1]))
+                    self.dump_worker(item[0], item[1])
 
         except FileNotFoundError:
             print("cannot find the file:", src_path)
@@ -467,19 +456,21 @@ class Browser_Collector:
 
         item_list = os.listdir(src_path)
         for item in item_list:
-            if os.path.isfile(src_path + "\\" + item):
-                file_list.append([src_path + "\\" + item, dst_path + "\\" + item])
+            if os.path.isfile(src_path+"\\"+item):
+                file_list.append([src_path+"\\"+item, dst_path+"\\"+item])
             else:
-                file_list += self.search_directory(src_path + "\\" + item, dst_path + "\\" + item)
+                file_list += self.search_directory(src_path+"\\"+item, dst_path+"\\"+item)
 
         return file_list
 
     def dump_worker(self, src_path, dst_path):
         try:
-            subprocess.call(['RawCopy.exe', '/FileNamePath:' + src_path, '/OutputPath:' + dst_path])
+            shutil.copyfile(src_path, dst_path)
 
-        except subprocess.CalledProcessError as e:
-            print("{}: {}".format(e, src_path))
+        except Exception as e:
+            if "Permission denied" in str(e):
+                dst_path = "\\".join(dst_path.split("\\")[:-1])
+                subprocess.run(['RawCopy.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
 
     def create_summary(self):
         output = "EventLog\t UTC+{}\n".format(self.UTC)
@@ -497,13 +488,14 @@ class Browser_Collector:
             f.write(output)
 
 # if __name__ == "__main__":
-#     result_path = "D:\\Goorm\\Project_2\\test"
-#     browser_version = "Windows 10"
+#     result_path = os.getcwd()+"\\Browser"
+#     os_version = "Windows 10 Pro"
 #     system_root = "C:\\Windows"
-#     user_list = ["C:\\Users\\user1", "C:\\Users\\user2"]
+#     profile_list = ["C:\\Users\\user1", "C:\\Users\\user2"]
+#     IE_version = "10.1"
 #     UTC = 9
 
-#     browser_config = Browser_Config(browser_version, system_root, user_list)
+#     browser_config = Browser_Config(os_version, system_root, profile_list, IE_version)
 #     artifact_path = browser_config.run()
 
 #     browser_collector = Browser_Collector(result_path, UTC)
