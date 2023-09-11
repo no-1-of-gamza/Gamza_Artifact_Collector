@@ -1,7 +1,8 @@
 import os
-from datetime import datetime, timedelta
-from multiprocessing import Process, Queue
 import subprocess
+from multiprocessing import Process, Queue
+import shutil
+from datetime import datetime, timedelta
 
 
 class EventLog_Config:
@@ -125,20 +126,22 @@ class EventLog_Collector:
     def dump_worker(self, src_path, signal):
         dst_path = self.result_path
         try:
-            subprocess.run(["RawCopy.exe", "/FileNamePath:"+src_path, "/OutputPath:"+dst_path])
-        except Exception as e:
-            print(e)
+            shutil.copyfile(src_path, dst_path+"\\"+src_path.split("\\")[-1])
 
+        except Exception as e:
+            if "Permission denied" in str(e):
+                dst_path = "\\".join(dst_path.split("\\")[:-1])
+                subprocess.run(['RawCopy.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
+            else:
+                print(src_path, "cannot dump:", e)
+        
         signal.put(1)
 
 
 # if __name__ == "__main__":
-    
 #     result_path = "D:\\Goorm\\Project_2\\code\\EventLog"
 #     UTC = 9
 #     system_root = "C:\\Windows"
-
-#     start_time = time.time()
 
 #     config = EventLog_Config("Windows 10 Pro", system_root)
 #     artifact_path = config.run()
@@ -146,7 +149,4 @@ class EventLog_Collector:
 #     collector = EventLog_Collector(result_path, UTC)
 #     collector.collect(artifact_path)
 
-#     end_time = time.time()
-
 #     print("complete")
-#     print("time:", end_time-start_time)

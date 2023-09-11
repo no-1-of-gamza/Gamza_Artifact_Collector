@@ -3,6 +3,7 @@
 import os
 import subprocess
 import multiprocessing
+import shutil
 from datetime import datetime, timedelta
 
 class EventLog_Config:
@@ -103,27 +104,32 @@ class EventLog_Collector:
         while True:
             result += result_signal.get()
             if result >= cnt:
-                print "dumping event log complete..."
+                print("dumping event log complete...")
                 break
 
     def dump_worker(self, src_path, signal):
         dst_path = self.result_path
         try:
-            subprocess.call(["RawCopy.exe", "/FileNamePath:" + src_path, "/OutputPath:" + dst_path])
-        except Exception as e:
-            print e
+            shutil.copyfile(src_path, dst_path+"\\"+src_path.split("\\")[-1])
 
+        except Exception as e:
+            if "Permission denied" in str(e):
+                dst_path = "\\".join(dst_path.split("\\")[:-1])
+                subprocess.run(['RawCopy.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
+            else:
+                print(src_path, "cannot dump:", e)
+        
         signal.put(1)
 
-if __name__ == "__main__":
-    result_path = "D:\\Goorm\\Project_2\\code\\EventLog"
-    UTC = 9
-    system_root = "C:\\Windows"
+# if __name__ == "__main__":
+#     result_path = "D:\\Goorm\\Project_2\\code\\EventLog"
+#     UTC = 9
+#     system_root = "C:\\Windows"
 
-    config = EventLog_Config("Windows 10 Pro", system_root)
-    artifact_path = config.run()
+#     config = EventLog_Config("Windows 10 Pro", system_root)
+#     artifact_path = config.run()
 
-    collector = EventLog_Collector(result_path, UTC)
-    collector.collect(artifact_path)
+#     collector = EventLog_Collector(result_path, UTC)
+#     collector.collect(artifact_path)
 
-    print "complete"
+#     print("complete")
