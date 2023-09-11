@@ -15,8 +15,7 @@ class Extension:
         self.drive_list = []
         self.artifact_path = []
         self.extension_info = []
-        self.src = []
-        self.dst = []
+        self.src_dst = []
         self.none = []
         self.none_num = 0
 
@@ -26,7 +25,7 @@ class Extension:
             drive = chr(drive_letter) + ":\\"
             if os.path.exists(drive):
                 self.drive_list.append(chr(drive_letter))
-        return print("확인된 드라이브 목록:", self.drive_list, "\n")
+        return "확인된 드라이브 목록: {}".format(self.drive_list)
 
     # 폴더 생성
     def create_dir(self, result_path, drive_list):
@@ -37,7 +36,7 @@ class Extension:
                 if not os.path.exists(dir_path):
                     try:
                         os.makedirs(dir_path)
-                    except FileExistsError:
+                    except OSError:
                         pass
 
     # 아티팩트 정보 수집
@@ -55,7 +54,7 @@ class Extension:
                 current_dir = dirs_to_check.pop()
                 try:
                     items = os.listdir(current_dir)
-                except PermissionError as e:
+                except OSError:
                     # 액세스 거부된 디렉토리인 경우 무시
                     continue
 
@@ -69,8 +68,7 @@ class Extension:
                             target_dir = os.path.splitext(item)[1].replace(".", "")
                             src = item_path
                             dst = os.path.join(self.result_path, drive, target_dir)
-                            self.src.append(src)
-                            self.dst.append(dst)
+                            self.src_dst.append((src, dst))
 
                             # get info
                             file_info = self.get_file_info(item_path)
@@ -82,20 +80,21 @@ class Extension:
 
             self.create_summary(drive)
 
-    def dump(self):
-        if len(self.src) != len(self.dst):
-            print("len is different")
-        for src, dst in zip(self.src, self.dst):
-            try:
-                shutil.copyfile(src, dst)
-            except OSError:
-                script_dir = os.path.dirname(__file__)
-                parent_dir = os.path.join(script_dir, "..")
-                rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
-                command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
-                subprocess.run(command)
+    def dump(self, src_dst):
+        src = src_dst[0]
+        dst = src_dst[1]
 
-    def get_file_info(self, file_path) -> list:
+        print(src, dst)
+        try:
+            script_dir = os.path.dirname(__file__)
+            parent_dir = os.path.join(script_dir, "..")
+            rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
+            command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
+            subprocess.call(command)
+        except Exception as e:
+            print(e)
+
+    def get_file_info(self, file_path):
         if os.path.isfile(file_path):
             stat = os.stat(file_path)
             name = file_path.split("\\")[-1]
@@ -107,7 +106,7 @@ class Extension:
             info = [name, mtime, atime, ctime, size, file_path]
             return info
 
-    def timestamp_to_UTC(self, timestamp) -> datetime:
+    def timestamp_to_UTC(self, timestamp):
         utc_offset = timedelta(hours=int(self.UTC))
         utc_modify = datetime.utcfromtimestamp(int(timestamp)) + utc_offset
         return utc_modify
@@ -132,7 +131,7 @@ class Extension:
                         "파일 정보를 가져올 수 없습니다.", "", "", "", "", self.none[self.none_num])
                     self.none_num += 1
 
-        with open(self.result_path + '\\' + drive + '\summary.txt', 'w', encoding='utf-8') as f:
+        with open(os.path.join(self.result_path, drive, 'summary.txt'), 'w') as f:
             f.write(output)
 
         self.extension_info = []
@@ -151,9 +150,11 @@ def main():
     artifact.collect()
 
     pool = multiprocessing.Pool(processes=4)
-    pool.apply_async(artifact.dump)
+    pool.map(artifact.dump, artifact.src_dst)
     pool.close()
     pool.join()
+
+    print "완료"
 
 if __name__ == "__main__":
     main()
