@@ -8,6 +8,6 @@ def option_set():
     parser.add_option("-s", "--search", action="store", type="string", dest="search", help="Search Filename Extension:")
 
     '''
-    기본 사용법: python Gamza_Artifact_Collector.py 
+    python Gamza_Artifact_Collector.py 
     '''
     return parser.parse_args()

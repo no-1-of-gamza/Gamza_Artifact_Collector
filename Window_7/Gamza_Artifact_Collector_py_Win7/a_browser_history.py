@@ -1,21 +1,21 @@
+# -*- coding: utf-8 -*-
 import os
 from datetime import datetime, timedelta
 import shutil
 import subprocess
 
 class Browser_Config:
-    def __init__(self, version, system_root, profile_list, IE_version):
+    def __init__(self, version, system_root, profile_list):
         self.artifact = {}
         self.version = version
         self.system_root = system_root
         self.profile_list = profile_list
-        self.IE_version = IE_version
 
     def run(self):
         self.artifact["Chrome"] = self.get_path_Chrome(self.profile_list, self.version)
         self.artifact["Firefox"] = self.get_path_Firefox(self.profile_list, self.version)
         self.artifact["Edge"] = self.get_path_Edge(self.profile_list, self.version)
-        # self.artifact["IE"] = self.get_path_IE(self.profile_list, self.version, self.IE_version)
+        self.artifact["IE"] = self.get_path_IE(self.profile_list, self.version)
         self.artifact["Whale"] = self.get_path_Whale(self.profile_list, self.version)
 
         return self.artifact
@@ -215,7 +215,7 @@ class Browser_Config:
 
         return collected_subpath
 
-    def get_path_IE(self, profile_list, os_version, IE_version):
+    def get_path_IE(self, profile_list, os_version):
         collected_path = {}
 
         for profile_path in profile_list:
@@ -234,66 +234,61 @@ class Browser_Config:
 
             for profile_path in profile_list:
                 name = profile_path.split("\\")[-1]
-                sub_path = self.get_subpath_IE(profile_path+default_path_local, profile_path+default_path_roaming, IE_version)
+                sub_path = self.get_subpath_IE(profile_path+default_path_local, profile_path+default_path_roaming)
 
                 for key in sub_path.keys():
                     collected_path[name+"."+key] += sub_path[key]
 
         elif "Windows XP" in os_version:
-            default_path = "\\Local Settings\\"
-
             for profile_path in profile_list:
                 name = profile_path.split("\\")[-1]
-                sub_path = self.get_subpath_IE_XP(profile_path+default_path, IE_version)
+                sub_path = self.get_subpath_IE_XP(profile_path)
 
                 for key in sub_path.keys():
                     collected_path[name+"."+key] += sub_path[key]
 
         return collected_path
 
-    def get_subpath_IE(self, path_local, path_roaming, IE_version):
+    def get_subpath_IE(self, path_local, path_roaming):
         collected_subpath = {}
 
-        if int(IE_version.split(".")[0]) >= 10:
-            collected_subpath["history"] = [
-            path_local+"Windows\\WebCache"
-			]
-        else:
-            collected_subpath["history"] = [
-				path_local+"Windows\\History\\History.IE5"
-			]
-            collected_subpath["cache"] = [
-				path_local+"Windows\\Temporary Internet Files\\History.IE5"
-			]
-            collected_subpath["cookie"] = [
-				path_roaming+"Windows\\Cookies"
-			]
-            collected_subpath["download"] = [
-				path_roaming+"Windows\\IEDownloadHistory"
-			]
+        collected_subpath["history"] = [
+            path_local+"Windows\\WebCache",
+            path_local+"Windows\\History\\History.IE5",
+            path_local+"Internet Explorer\\Recovery"
+        ]
+        collected_subpath["cache"] = [
+            path_local+"Feeds Cache"
+            # path_local+"Windows\\Temporary Internet Files\\History.IE5"
+        ]
+        collected_subpath["cookie"] = [
+            path_roaming+"Windows\\INetCookies",
+            path_roaming+"Windows\\Cookies",
+            "\\".join(path_local.split("\\")[:-2]) + "\\Temp\\Low\\Cookies"
+        ]
+        collected_subpath["download"] = [
+            path_roaming+"Windows\\IEDownloadHistory"
+        ]
 
         collected_subpath = self.path_validation_check(collected_subpath)
 
         return collected_subpath
 
-    def get_subpath_IE_XP(self, path, IE_version):
+    def get_subpath_IE_XP(self, path):
         collected_subpath = {}
 
-        if int(IE_version.split(".")[0]) >= 10:
-            collected_subpath["history"] = [
-                path+"Windows\\WebCache"
-			]
-        else:
-            collected_subpath["history"] = [
-				path+"History\\History.IE5"
-			]
-            collected_subpath["cache"] = [
-				path+"Temporary Internet Files"
-			]
-            collected_subpath["cookie"] = [
-				path+"Cookies"
-			]
-            collected_subpath["download"] = []
+        collected_subpath["history"] = [
+            path+"\\Local Settings\\WebCache",
+            path+"\\Local Settings\\History\\History.IE5"
+        ]
+        collected_subpath["cache"] = [
+            path+"\\Local Settings\\Temporary Internet Files",
+            path+"\\Local Settings\\Application Data\\Microsoft\\Feeds Cache"
+        ]
+        collected_subpath["cookie"] = [
+            path+"\\Cookies"
+        ]
+        collected_subpath["download"] = []
 
         collected_subpath = self.path_validation_check(collected_subpath)
         
@@ -486,17 +481,3 @@ class Browser_Collector:
 
         with open(self.result_path + '\\summary.txt', 'w') as f:
             f.write(output)
-
-# if __name__ == "__main__":
-#     result_path = os.getcwd()+"\\Browser"
-#     os_version = "Windows 10 Pro"
-#     system_root = "C:\\Windows"
-#     profile_list = ["C:\\Users\\user1", "C:\\Users\\user2"]
-#     IE_version = "10.1"
-#     UTC = 9
-
-#     browser_config = Browser_Config(os_version, system_root, profile_list, IE_version)
-#     artifact_path = browser_config.run()
-
-#     browser_collector = Browser_Collector(result_path, UTC)
-#     browser_collector.collect(artifact_path)

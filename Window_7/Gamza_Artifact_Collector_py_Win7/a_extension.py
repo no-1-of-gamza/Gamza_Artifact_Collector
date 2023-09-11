@@ -15,20 +15,19 @@ class Extension:
         self.drive_list = []
         self.artifact_path = []
         self.extension_info = []
-        self.src = []
-        self.dst = []
+        self.src_dst = []
         self.none = []
         self.none_num = 0
 
-    # 드라이브 확인
+    # Check drives
     def check_drive(self):
         for drive_letter in range(65, 91):
             drive = chr(drive_letter) + ":\\"
             if os.path.exists(drive):
                 self.drive_list.append(chr(drive_letter))
-        return print("확인된 드라이브 목록:", self.drive_list, "\n")
+        return "Detected drive list: {}".format(self.drive_list)
 
-    # 폴더 생성
+    # Create directories
     def create_dir(self, result_path, drive_list):
         for drive in drive_list:
             for target in self.target_extensions:
@@ -37,12 +36,12 @@ class Extension:
                 if not os.path.exists(dir_path):
                     try:
                         os.makedirs(dir_path)
-                    except FileExistsError:
+                    except OSError:
                         pass
 
-    # 아티팩트 정보 수집
+    # Collect artifact information
     def collect(self):
-        # 수집 환경 세팅
+        # Set up collection environment
         file_list = []
         self.check_drive()
         self.create_dir(self.result_path, self.drive_list)
@@ -55,8 +54,8 @@ class Extension:
                 current_dir = dirs_to_check.pop()
                 try:
                     items = os.listdir(current_dir)
-                except PermissionError as e:
-                    # 액세스 거부된 디렉토리인 경우 무시
+                except OSError:
+                    # Ignore directories with access denied
                     continue
 
                 for item in items:
@@ -65,14 +64,13 @@ class Extension:
                         dirs_to_check.append(item_path)
                     elif os.path.isfile(item_path):
                         if os.path.splitext(item)[1] in self.target_extensions:
-                            # dump list
+                            # Dump list
                             target_dir = os.path.splitext(item)[1].replace(".", "")
                             src = item_path
                             dst = os.path.join(self.result_path, drive, target_dir)
-                            self.src.append(src)
-                            self.dst.append(dst)
+                            self.src_dst.append((src, dst))
 
-                            # get info
+                            # Get info
                             file_info = self.get_file_info(item_path)
                             if file_info is None:
                                 self.none.append(item_path)
@@ -82,20 +80,21 @@ class Extension:
 
             self.create_summary(drive)
 
-    def dump(self):
-        if len(self.src) != len(self.dst):
-            print("len is different")
-        for src, dst in zip(self.src, self.dst):
-            try:
-                shutil.copyfile(src, dst)
-            except OSError:
-                script_dir = os.path.dirname(__file__)
-                parent_dir = os.path.join(script_dir, "..")
-                rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
-                command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
-                subprocess.run(command)
+    def dump(self, src_dst):
+        src = src_dst[0]
+        dst = src_dst[1]
 
-    def get_file_info(self, file_path) -> list:
+        print(src, dst)
+        try:
+            script_dir = os.path.dirname(__file__)
+            parent_dir = os.path.join(script_dir)
+            rawcopy_path = os.path.join(parent_dir, "RawCopy.exe")
+            command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
+            subprocess.call(command)
+        except Exception as e:
+            print(e)
+
+    def get_file_info(self, file_path):
         if os.path.isfile(file_path):
             stat = os.stat(file_path)
             name = file_path.split("\\")[-1]
@@ -107,20 +106,20 @@ class Extension:
             info = [name, mtime, atime, ctime, size, file_path]
             return info
 
-    def timestamp_to_UTC(self, timestamp) -> datetime:
+    def timestamp_to_UTC(self, timestamp):
         utc_offset = timedelta(hours=int(self.UTC))
         utc_modify = datetime.utcfromtimestamp(int(timestamp)) + utc_offset
         return utc_modify
 
     def create_summary(self, drive):
-        output = "Extension     UTC+{}\n".format(self.UTC)
+        output = u"Extension     UTC+{}\n".format(self.UTC)  
         for path in self.artifact_path:
             output += path
-        output += "\n\n"
+        output += u"\n\n"
 
-        strFormat = '%-60s%-25s%-25s%-25s%-20s%s\n'
+        strFormat = u'%-60s%-25s%-25s%-25s%-20s%s\n'
 
-        title = ['File name', 'Modify time', 'Access time', 'Create time', 'File size(byte)', 'Path']
+        title = [u'File name', u'Modify time', u'Access time', u'Create time', u'File size(byte)', u'Path']  
         output += strFormat % (title[0], title[1], title[2], title[3], title[4], title[5])
 
         for info in self.extension_info:
@@ -129,31 +128,12 @@ class Extension:
             except TypeError:
                 if self.none_num < len(self.none):
                     output += strFormat % (
-                        "파일 정보를 가져올 수 없습니다.", "", "", "", "", self.none[self.none_num])
+                        u"Unable to retrieve file information.", u"", u"", u"", u"", self.none[self.none_num])  
                     self.none_num += 1
 
-        with open(self.result_path + '\\' + drive + '\summary.txt', 'w', encoding='utf-8') as f:
-            f.write(output)
+        with open(os.path.join(self.result_path, drive, 'summary.txt'), 'w') as f:
+            f.write(output.encode('utf-8'))  
 
         self.extension_info = []
 
-def main():
-    result_path = "C:\\Users\\ryues\\Downloads\\Collector\\Extension"
-    UTC = 9
 
-    parser = argparse.ArgumentParser(description="Artifact Collector")
-    parser.add_argument("--extensions", nargs="+", default=[".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk"],
-                        help="List of extensions to collect")
-    args = parser.parse_args()
-
-    artifact = Extension(result_path, UTC, args.extensions)
-    artifact.create_dir(result_path, artifact.drive_list)
-    artifact.collect()
-
-    pool = multiprocessing.Pool(processes=4)
-    pool.apply_async(artifact.dump)
-    pool.close()
-    pool.join()
-
-if __name__ == "__main__":
-    main()
