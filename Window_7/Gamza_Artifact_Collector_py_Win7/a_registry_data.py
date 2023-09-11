@@ -4,12 +4,11 @@ from datetime import datetime, timedelta
 from multiprocessing import Process, Queue
 import subprocess
 
-
 class Registry_config:
-    def __init__(self, version, user_name):
+    def __init__(self, version, profile_list):
         self.artifact = {}
         self.version = version
-        self.user_name = user_name
+        self.profile_list = profile_list
 
     def run(self):
         if "Windows 10" in self.version:
@@ -20,6 +19,8 @@ class Registry_config:
             self.artifact_Win7()
         elif "Windows XP" in self.version:
             self.artifact_WinXP()
+
+        self.path_validation_check(self.artifact)
 
         return self.artifact
 
@@ -42,7 +43,7 @@ class Registry_config:
             "C:\\Windows\\SysWOW64\\config"
         ]
 
-        self.artifact["amcache"] = "C:\\Windows\\appcompat\\Programs\\Amcache.hve"
+        self.artifact["amcache"] = ["C:\\Windows\\appcompat\\Programs\\Amcache.hve"]
 
     def artifact_Win8(self):
         self.artifact["registry"] = [
@@ -59,11 +60,11 @@ class Registry_config:
             "C:\\Users\\Default"
         ]
         self.artifact["usrclass"] = []
-        for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\" + user)
-            self.artifact["usrclass"].append("C:\\Users\\" + user + "\\AppData\\Local\\Microsoft\\Windows")
+        for profile_path in self.profile_list:
+            self.artifact["ntuser"].append(profile_path)
+            self.artifact["usrclass"].append(profile_path+"\\AppData\\Local\\Microsoft\\Windows")
 
-        self.artifact["amcache"] = "C:\\Windows\\AppCompat\\Programs\\Amcache.hve"
+        self.artifact["amcache"] = ["C:\\Windows\\AppCompat\\Programs\\Amcache.hve"]
 
     def artifact_Win7(self):
         self.artifact["registry"] = [
@@ -79,11 +80,11 @@ class Registry_config:
             "C:\\Users\\Default"
         ]
         self.artifact["usrclass"] = []
-        for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\" + user)
-            self.artifact["usrclass"].append("C:\\Users\\" + user + "\\AppData\\Local\\Microsoft\\Windows")
+        for profile_path in self.profile_list:
+            self.artifact["ntuser"].append(profile_path)
+            self.artifact["usrclass"].append(profile_path+"\\AppData\\Local\\Microsoft\\Windows")
 
-        self.artifact["amcache"] = "C:\\Windows\\AppCompat\\Programs\\RecentFileCache.bcf"
+        self.artifact["amcache"] = ["C:\\Windows\\AppCompat\\Programs\\RecentFileCache.bcf"]
 
     def artifact_WinXP(self):
         self.artifact["registry"] = [
@@ -96,19 +97,31 @@ class Registry_config:
 
         self.artifact["ntuser"] = [
             "C:\\WINDOWS\\repair",
-            "C:\\Documents and Settings\\Default User",  # caution: this path can't dump with this program
-            "C:\\Documents and Settings\\Administrator"  # caution: this path can't dump with this program
+            "C:\\Documents and Settings\\Default User",
+            "C:\\Documents and Settings\\Administrator"
         ]
         self.artifact["usrclass"] = []
-        for user in self.user_name:
-            self.artifact["ntuser"].append("C:\\Users\\" + user)
-            self.artifact["usrclass"].append("C:\\Users\\" + user + "\\AppData\\Local\\Microsoft\\Windows")
+        for profile_path in self.profile_list:
+            self.artifact["ntuser"].append(profile_path)
+            self.artifact["usrclass"].append(profile_path+"\\AppData\\Local\\Microsoft\\Windows")
 
+        self.artifact["amcache"] = []
+
+    def path_validation_check(self, path_object):
+        for key in path_object.keys():
+            i = 0
+            while i < len(path_object[key]):
+                if not os.path.exists(path_object[key][i]):
+                    del path_object[key][i]
+                else:
+                    i += 1
+        return path_object
 
 class Registry_Collector:
     def __init__(self, result_path, UTC):
         self.result_path = result_path
         self.UTC = UTC
+
         self.collected_info = []
 
     def collect(self, artifact_path):
@@ -119,47 +132,45 @@ class Registry_Collector:
                 dump_list.append(path)
 
             for dir_path in artifact_path["ntuser"]:
-                user_profile_path = os.path.expanduser(dir_path)  # 사용자 프로파일 경로 가져오기
-                if os.path.exists(user_profile_path):
-                    file_list = os.listdir(user_profile_path)
-                    for file_name in file_list:
-                        if file_name.upper().endswith("NTUSER.DAT"):  # 대문자 변환 및 파일 확장자 검사
-                            self.collected_info.append(self.get_file_info(os.path.join(user_profile_path, file_name)))
-                            dump_list.append(os.path.join(user_profile_path, file_name))
+                file_list = os.listdir(dir_path)
+                for file_name in file_list:
+                    if file_name[-10:].upper() == "NTUSER.DAT":
+                        self.collected_info.append(self.get_file_info(dir_path+"\\"+file_name))
+                        dump_list.append(dir_path+"\\"+file_name)
 
             for dir_path in artifact_path["usrclass"]:
-                user_profile_path = os.path.expanduser(dir_path)  # 사용자 프로파일 경로 가져오기
-                if os.path.exists(user_profile_path):
-                    file_list = os.listdir(user_profile_path)
-                    for file_name in file_list:
-                        if file_name.upper().endswith("USRCLASS.DAT"):  # 대문자 변환 및 파일 확장자 검사
-                            self.collected_info.append(self.get_file_info(os.path.join(user_profile_path, file_name)))
-                            dump_list.append(os.path.join(user_profile_path, file_name))
+                file_list = os.listdir(dir_path)
+                for file_name in file_list:
+                    if file_name[-12:].upper() == "USRCLASS.DAT":
+                        self.collected_info.append(self.get_file_info(dir_path+"\\"+file_name))
+                        dump_list.append(dir_path+"\\"+file_name)
 
-            self.collected_info.append(self.get_file_info(artifact_path["amcache"]))
-            dump_list.append(artifact_path["amcache"])
+            if len(artifact_path["amcache"]) > 0:
+                self.collected_info.append(self.get_file_info(artifact_path["amcache"][0]))
+                dump_list += artifact_path["amcache"]
 
             self.collect_dump(dump_list)
 
-        except OSError:
-            print("OSError occurred")
-
+        except FileNotFoundError:
+            print "FileNotFoundError occur"
+        
         self.create_summary()
 
     def get_file_info(self, file_path):
         stat = os.stat(file_path)
+        
         name = file_path.split("\\")[-1]
         mtime = self.timestamp_to_UTC(stat.st_mtime)
         atime = self.timestamp_to_UTC(stat.st_atime)
         ctime = self.timestamp_to_UTC(stat.st_ctime)
-        size = stat.st_size // 1024  # KB
+        size = stat.st_size//1024 # KB
 
         info = [name, mtime, atime, ctime, size, file_path]
         return info
 
     def timestamp_to_UTC(self, timestamp):
         utc_offset = timedelta(hours=int(self.UTC))
-        utc_modify = datetime.utcfromtimestamp(int(timestamp)) + utc_offset
+        utc_modify = datetime.utcfromtimestamp(int(timestamp))+utc_offset
 
         return utc_modify
 
@@ -170,12 +181,12 @@ class Registry_Collector:
         strFormat = '%-30s%-25s%-25s%-25s%-20s%s\n'
 
         title = ['File name', 'Modify time', 'Access time', 'Create time', 'File size(KB)', 'Path']
-        output += strFormat % (title[0], title[1], title[2], title[3], title[4], title[5])
+        output += strFormat %(title[0], title[1], title[2], title[3], title[4], title[5])
 
         for info in self.collected_info:
-            output += strFormat % (info[0], info[1], info[2], info[3], info[4], info[5])
+            output += strFormat %(info[0], info[1], info[2], info[3], info[4], info[5])
 
-        with open(self.result_path + '\\summary.txt', 'w') as f:
+        with open(self.result_path+'\\summary.txt', 'w') as f:
             f.write(output)
 
     def collect_dump(self, dump_list):
@@ -194,28 +205,11 @@ class Registry_Collector:
         while True:
             result += result_signal.get()
             if result >= cnt:
-                print("dumping registry complete...")
+                print "dumping registry complete..."
                 break
 
     def dump_worker(self, src_path, signal):
         dst_path = self.result_path
 
-        try:
-            subprocess.call("RawCopy64.exe /FileNamePath:" + src_path + " /OutputPath:" + dst_path, shell=True)
-        except Exception as e:
-            print(e)
-
+        subprocess.call(["RawCopy.exe", "/FileNamePath:"+src_path, "/OutputPath:"+dst_path])
         signal.put(1)
-
-if __name__ == "__main__":
-    result_path = "D:\\Goorm\\Project_2\\code\\Registry"
-    user_name = ['yura']
-    UTC = 9
-    start_time = time.time()
-    config = Registry_config("Windows 7", user_name)
-    artifact_path = config.run()
-    collector = Registry_Collector(result_path, UTC)
-    collector.collect(artifact_path)
-    end_time = time.time()
-    print("complete")
-    print("time:", end_time - start_time)

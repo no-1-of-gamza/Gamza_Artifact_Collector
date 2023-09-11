@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 import os
 import subprocess
-import multiprocessing
+from multiprocessing import Process, Queue
 import shutil
 from datetime import datetime, timedelta
+
 
 class EventLog_Config:
     def __init__(self, version, system_root):
@@ -36,6 +36,7 @@ class EventLog_Config:
     def artifact_WinXP(self):
         self.artifact = os.path.join(self.system_root, "system32", "config")
 
+
 class EventLog_Collector:
     def __init__(self, result_path, UTC):
         self.result_path = result_path
@@ -51,10 +52,12 @@ class EventLog_Collector:
             extension = file_name.split(".")[-1].lower()
             if extension == "evtx" or extension == "evt":
                 file_path = os.path.join(dir_path, file_name)
+
                 self.collected_info.append(self.get_file_info(file_path))
                 dump_list.append(file_path)
 
         self.collect_dump(dump_list)
+
         self.create_summary()
 
     def get_file_info(self, file_path):
@@ -64,7 +67,6 @@ class EventLog_Collector:
         atime = self.timestamp_to_UTC(stat.st_atime)
         ctime = self.timestamp_to_UTC(stat.st_ctime)
         size = stat.st_size // 1024  # KB
-
         info = [name, mtime, atime, ctime, size, file_path]
         return info
 
@@ -89,10 +91,10 @@ class EventLog_Collector:
             f.write(output)
 
     def collect_dump(self, dump_list):
-        result_signal = multiprocessing.Queue()
+        result_signal = Queue()
         process_list = []
         for path in dump_list:
-            process = multiprocessing.Process(target=self.dump_worker, args=(path, result_signal))
+            process = Process(target=self.dump_worker, args=(path, result_signal))
             process_list.append(process)
             process.start()
 
@@ -104,32 +106,20 @@ class EventLog_Collector:
         while True:
             result += result_signal.get()
             if result >= cnt:
-                print("dumping event log complete...")
+                print "dumping event log complete..."
                 break
 
     def dump_worker(self, src_path, signal):
         dst_path = self.result_path
         try:
-            shutil.copyfile(src_path, dst_path+"\\"+src_path.split("\\")[-1])
+            shutil.copyfile(src_path, os.path.join(dst_path, src_path.split("\\")[-1]))
 
         except Exception as e:
             if "Permission denied" in str(e):
                 dst_path = "\\".join(dst_path.split("\\")[:-1])
-                subprocess.run(['RawCopy.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
+                subprocess.call(['RawCopy.exe', '/FileNamePath:'+src_path, '/OutputPath:'+dst_path])
             else:
-                print(src_path, "cannot dump:", e)
-        
+                print src_path, "cannot dump:", e
+
         signal.put(1)
 
-# if __name__ == "__main__":
-#     result_path = "D:\\Goorm\\Project_2\\code\\EventLog"
-#     UTC = 9
-#     system_root = "C:\\Windows"
-
-#     config = EventLog_Config("Windows 10 Pro", system_root)
-#     artifact_path = config.run()
-
-#     collector = EventLog_Collector(result_path, UTC)
-#     collector.collect(artifact_path)
-
-#     print("complete")

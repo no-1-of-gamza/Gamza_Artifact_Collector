@@ -20,22 +20,22 @@ class Systeminfo_Collector:
 
     def collect_systeminfo(self, controlset):
         subkey_computername = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\" + controlset + "\\Control\\ComputerName\\ActiveComputerName", 0, winreg.KEY_READ)
-        self.collected_info[u"ComputerName"] = winreg.QueryValueEx(subkey_computername, "ComputerName")[0]
+        self.collected_info["ComputerName"] = winreg.QueryValueEx(subkey_computername, "ComputerName")[0]
 
         subkey_osname = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-        self.collected_info[u"ProductName"] = winreg.QueryValueEx(subkey_osname, "ProductName")[0]
+        self.collected_info["ProductName"] = winreg.QueryValueEx(subkey_osname, "ProductName")[0]
 
         subkey_architecture = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\" + controlset + "\\Control\\Session Manager\\Environment", 0, winreg.KEY_READ)
-        self.collected_info[u"Processor_Architecture"] = winreg.QueryValueEx(subkey_architecture, "PROCESSOR_ARCHITECTURE")[0]
+        self.collected_info["Processor_Architecture"] = winreg.QueryValueEx(subkey_architecture, "PROCESSOR_ARCHITECTURE")[0]
 
         subkey_installpath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-        self.collected_info[u"InstallPath"] = winreg.QueryValueEx(subkey_installpath, "SystemRoot")[0]
+        self.collected_info["InstallPath"] = winreg.QueryValueEx(subkey_installpath, "SystemRoot")[0]
 
         subkey_productid = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-        self.collected_info[u"ProductId"] = winreg.QueryValueEx(subkey_productid, "ProductId")[0]
+        self.collected_info["ProductId"] = winreg.QueryValueEx(subkey_productid, "ProductId")[0]
 
         subkey_owner = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, winreg.KEY_READ)
-        self.collected_info[u"RegisteredOwner"] = winreg.QueryValueEx(subkey_owner, "RegisteredOwner")[0]
+        self.collected_info["RegisteredOwner"] = winreg.QueryValueEx(subkey_owner, "RegisteredOwner")[0]
 
     def collect_timezone(self, controlset):
         subkey_timezone = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\" + controlset + "\\Control\\TimeZoneInformation", 0, winreg.KEY_READ)
@@ -55,28 +55,28 @@ class Systeminfo_Collector:
         elif timezone_key == "GMT Standard Time":
             timezone_utc = 0
 
-        self.collected_info[u"Timezone"] = timezone_utc
+        self.collected_info["Timezone"] = timezone_utc
 
     def collect_accounts(self):
         handle = winreg.ConnectRegistry(None, winreg.HKEY_USERS)
         subkey_accounts = winreg.OpenKey(handle, "")
-        self.collected_info[u"AccountName"] = []
-        self.collected_info[u"UserProfile"] = []
+        self.collected_info["AccountName"] = []
+        self.collected_info["UserProfile"] = []
 
         try:
             i = 0
             while True:
                 account_path = winreg.EnumKey(subkey_accounts, i)
                 parts_path = account_path.split('-')
-                i += 1 
+                i += 1
                 if len(parts_path) < 4 or parts_path[3] != '21':
                     continue
 
                 account_name = self.get_accounts_name(account_path)
-                self.collected_info[u"AccountName"].append(account_name)
+                self.collected_info["AccountName"].append(account_name)
 
                 account_homepath = self.get_accounts_homepath(account_path)
-                self.collected_info[u"UserProfile"].append(account_homepath)
+                self.collected_info["UserProfile"].append(account_homepath)
 
         except Exception as e:
             pass
@@ -86,7 +86,7 @@ class Systeminfo_Collector:
         subkey_accounts = winreg.OpenKey(handle, account_path + "\\Volatile Environment")
         account_name = ""
 
-        win_version = self.collected_info[u"ProductName"]
+        win_version = self.collected_info["ProductName"]
         if win_version == "Microsoft Windows XP":
             res = winreg.QueryValueEx(subkey_accounts, "HOMEPATH")[0]
             account_name = res.split("\\")[-1]
@@ -94,43 +94,45 @@ class Systeminfo_Collector:
             account_name = winreg.QueryValueEx(subkey_accounts, "USERNAME")[0]
 
         return account_name
-    
+
     def get_accounts_homepath(self, account_path):
         handle = winreg.ConnectRegistry(None, winreg.HKEY_USERS)
         subkey_accounts = winreg.OpenKey(handle, account_path + "\\Volatile Environment")
 
         win_version = self.collected_info["ProductName"]
         if win_version == "Microsoft Windows XP":
-            account_name = winreg.QueryValueEx(subkey_accounts, "HOMEPATH")[0].encode('utf-8')
+            account_name = winreg.QueryValueEx(subkey_accounts, "HOMEPATH")[0]
         else:
-            account_name = winreg.QueryValueEx(subkey_accounts, "USERPROFILE")[0].encode('utf-8')
+            account_name = winreg.QueryValueEx(subkey_accounts, "USERPROFILE")[0]
 
         return account_name
 
     def create_summary(self):
-        output = u"System Info\n"
-        output += u"\n\n"
+        output = "System Info\n"
+        output += "\n\n"
 
-        strFormat = u'%-30s%s\n'
+        strFormat = '%-30s%s\n'
 
-        title = [u'Type', u'Content']
+        title = ['Type', 'Content']
         output += strFormat % (title[0], title[1])
 
         for key in self.collected_info.keys():
             if type(self.collected_info[key]) == list:
-                list_result = u""
+                list_result = ""
                 for item in self.collected_info[key]:
-                    list_result += item + u"\t"
+                    list_result += item + "\t"
                 output += strFormat % (key, list_result)
 
             else:
                 output += strFormat % (key, self.collected_info[key])
 
-        with open(self.result_path + u'\\summary.txt', 'w') as f:
-            f.write(output.encode('utf-8'))
+        with open(self.result_path + '\\summary.txt', 'w') as f:
+            f.write(output)
 
 if __name__ == "__main__":
-    result_path = u".\\SystemInfo"  # 결과 경로도 유니코드 문자열로 변경
+    result_path = ".\\SystemInfo"
 
     collector = Systeminfo_Collector(result_path)
-    system_info = collector.collect()  # 이 system_info가 메인으로 넘어가면 됨
+    system_info = collector.collect()
+
+    print "complete"
