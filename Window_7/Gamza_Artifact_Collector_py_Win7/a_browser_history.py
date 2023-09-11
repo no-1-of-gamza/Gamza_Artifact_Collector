@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from datetime import datetime, timedelta
 import shutil
@@ -480,16 +481,3 @@ class Browser_Collector:
 
         with open(self.result_path + '\\summary.txt', 'w') as f:
             f.write(output)
-
-# if __name__ == "__main__":
-#     result_path = os.getcwd()+"\\Browser"
-#     os_version = "Windows 10 Pro"
-#     system_root = "C:\\Windows"
-#     profile_list = ["C:\\Users\\user1", "C:\\Users\\user2"]
-#     UTC = 9
-
-#     browser_config = Browser_Config(os_version, system_root, profile_list)
-#     artifact_path = browser_config.run()
-
-#     browser_collector = Browser_Collector(result_path, UTC)
-#     browser_collector.collect(artifact_path)

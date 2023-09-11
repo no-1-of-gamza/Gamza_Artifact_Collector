@@ -112,14 +112,14 @@ class Extension:
         return utc_modify
 
     def create_summary(self, drive):
-        output = "Extension     UTC+{}\n".format(self.UTC)
+        output = u"Extension     UTC+{}\n".format(self.UTC)  
         for path in self.artifact_path:
             output += path
-        output += "\n\n"
+        output += u"\n\n"
 
-        strFormat = '%-60s%-25s%-25s%-25s%-20s%s\n'
+        strFormat = u'%-60s%-25s%-25s%-25s%-20s%s\n'
 
-        title = ['File name', 'Modify time', 'Access time', 'Create time', 'File size(byte)', 'Path']
+        title = [u'File name', u'Modify time', u'Access time', u'Create time', u'File size(byte)', u'Path']  
         output += strFormat % (title[0], title[1], title[2], title[3], title[4], title[5])
 
         for info in self.extension_info:
@@ -128,33 +128,12 @@ class Extension:
             except TypeError:
                 if self.none_num < len(self.none):
                     output += strFormat % (
-                        "Unable to retrieve file information.", "", "", "", "", self.none[self.none_num])
+                        u"Unable to retrieve file information.", u"", u"", u"", u"", self.none[self.none_num])  
                     self.none_num += 1
 
         with open(os.path.join(self.result_path, drive, 'summary.txt'), 'w') as f:
-            f.write(output)
+            f.write(output.encode('utf-8'))  
 
         self.extension_info = []
 
-def main():
-    result_path = "C:\\Users\\ryues\\Downloads\\Collector\\Extension"
-    UTC = 9
 
-    parser = argparse.ArgumentParser(description="Artifact Collector")
-    parser.add_argument("--extensions", nargs="+", default=[".txt", ".pdf", ".doc", ".xlsx", ".zip", ".exe", ".lnk"],
-                        help="List of extensions to collect")
-    args = parser.parse_args()
-
-    artifact = Extension(result_path, UTC, args.extensions)
-    artifact.create_dir(result_path, artifact.drive_list)
-    artifact.collect()
-
-    pool = multiprocessing.Pool(processes=4)
-    pool.map(artifact.dump, artifact.src_dst)
-    pool.close()
-    pool.join()
-
-    print "Complete"
-
-if __name__ == "__main__":
-    main()

@@ -29,9 +29,9 @@ class RecycleBin:
     def check_os(self):
         if platform.system() == "Windows":
             self.version = platform.version()
-            #print(f"The current Windows OS version is {self.version}.")
+            # print "The current Windows OS version is {}.".format(self.version)
         else:
-            print("The current operating system is not Windows.")
+            print "The current operating system is not Windows."
             sys.exit()
 
     # Check drives
@@ -40,31 +40,29 @@ class RecycleBin:
             drive = chr(drive_letter) + ":\\"
             if os.path.exists(drive):
                 self.drive_list.append(chr(drive_letter))
-        return print("Detected drive list:", self.drive_list, "\n")
-    
+        return "Detected drive list:", self.drive_list, "\n"
+
     # Get the path based on the OS version
     def get_artifact_path(self):
         if "10" in self.version:
-            self.artifact_path = ["C", ":\$Recycle.Bin"]
+            self.artifact_path = ["C", ":\\$Recycle.Bin"]
         elif "8" in self.version:
-            self.artifact_path = ["C", ":\$Recycle.Bin"]
+            self.artifact_path = ["C", ":\\$Recycle.Bin"]
         elif "7" in self.version:
-            self.artifact_path = ["C", ":\$Recycle.Bin"]
+            self.artifact_path = ["C", ":\\$Recycle.Bin"]
         elif "XP" in self.version:
-            self.artifact_path = ["C", ":\Recycler"]
+            self.artifact_path = ["C", ":\\Recycler"]
         else:
-            print("Unsupported Windows version.")
+            print "Unsupported Windows version."
             return None
         return self.artifact_path
-    
-    
 
     # Create directories
     def create_dir(self, dir_path):
         if not os.path.exists(dir_path):
             try:
                 os.makedirs(dir_path)
-            except FileExistsError:
+            except OSError:
                 pass
 
     # Collect artifacts
@@ -75,7 +73,7 @@ class RecycleBin:
 
         if self.artifact_path is None:
             return  # Exit if the version is not supported
-        
+
         # Collect artifact information and dump
         # Iterate through drives
         for drive in self.drive_list:
@@ -92,7 +90,7 @@ class RecycleBin:
                     if (len(root_path_list) - 1) == 1:
                         dir_path = os.path.join(self.result_path, drive, dir)
                     else:
-                        path = ""   # Initialize as an empty variable
+                        path = ""  # Initialize as an empty variable
                         for part in root_path_list[2:]:
                             path += (part + "\\")
                     dir_path = os.path.join(self.result_path, drive, path, dir)
@@ -105,19 +103,16 @@ class RecycleBin:
                         path += (part + "\\")
                     dst = os.path.join(self.result_path, drive, path)
                     self.src_dst.append((src, dst))
-                    #print("src: "+src+"\ndst: "+dst+"\n")
-                    
+
                     # Get info
                     self.recyclebin_info.append(self.get_file_info(root + "\\" + file))
             self.create_summary(drive)
 
     def dump(self, src_dst):
-        #if len(self.src) != len(self.dst):
-        #    print("src != dst")
         src = src_dst[0]
         dst = src_dst[1]
-        
-        print(src, dst)
+
+        print src, dst
         try:
             script_dir = os.path.dirname(__file__)
             parent_dir = os.path.join(script_dir, "..")
@@ -125,8 +120,8 @@ class RecycleBin:
             command = [rawcopy_path, "/FileNamePath:" + src, "/OutputPath:" + dst]
             subprocess.call(command)
         except Exception as e:
-            print(e)
-            #shutil.copyfile(src, dst)
+            print e
+            # shutil.copyfile(src, dst)
 
     def get_file_info(self, file_path):
         stat = os.stat(file_path)
@@ -146,34 +141,27 @@ class RecycleBin:
         return utc_modify
 
     def create_summary(self, drive):
-        output = "RecycleBin     UTC+{}\n".format(self.UTC)
-        output += self.artifact_path[0] + "\n\n"
+        output = u"Extension     UTC+{}\n".format(self.UTC)
+        for path in self.artifact_path:
+            output += path
+        output += u"\n\n"
 
-        strFormat = '%-60s%-25s%-25s%-25s%-20s%s\n'
-        title = ['File name', 'Modify time', 'Access time', 'Create time', 'File size(byte)', 'Path']
+        strFormat = u'%-60s%-25s%-25s%-25s%-20s%s\n'
+
+        title = [u'File name', u'Modify time', u'Access time', u'Create time', u'File size(byte)', u'Path']
         output += strFormat % (title[0], title[1], title[2], title[3], title[4], title[5])
 
         for info in self.recyclebin_info:
             try:
-                output += strFormat %(info[0], info[1], info[2], info[3], info[4], info[5])
+                output += strFormat % (info[0], info[1], info[2], info[3], info[4], info[5])
             except TypeError:
                 if self.none_num < len(self.none):
-                    output += strFormat %("Unable to retrieve file information.", "", "", "", "", self.none[self.none_num])
+                    output += strFormat % (
+                        u"Unable to retrieve file information.", u"", u"", u"", u"", self.none[self.none_num])
                     self.none_num += 1
 
-        with open(os.path.join(self.result_path, drive, 'summary.txt'), 'w', encoding='utf-8') as f:
-            f.write(output)
+        with open(os.path.join(self.result_path, drive, 'summary.txt'), 'w') as f:
+            f.write(output.encode('utf-8'))
 
-if __name__ == "__main__":
-    result_path = "C:\\Users\\ryues\\Downloads\\Collector\\RecycleBin"
-    UTC = 9
+        self.recyclebin_info = []
 
-    artifact = RecycleBin(result_path, UTC)
-    artifact.check_drive()
-
-    artifact.collect()
-
-    with multiprocessing.Pool(processes=4) as pool:
-        pool.map(artifact.dump, artifact.src_dst)
-
-    print("Complete")

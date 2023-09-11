@@ -133,8 +133,6 @@ def main():
         inspect_path = "%s_%s_%s" % (date_time_save_folder, Inspector_name, Victim_name)
         os.mkdir(inspect_path)
 
-        artifact = args.artifact
-        target_extensions = args.file
         # Collect system information artifact (default)
         system_information_collector = Systeminfo_Collector(inspect_path)
         system_information = system_information_collector.collect()
@@ -146,20 +144,19 @@ def main():
 
         print "\nPlease Choose and Insert Option Collecting Artifact [1] or Collecting Specific Extension File [2]"
         function_choice = raw_input("Function:")
-
+        artifact=[]
+        target_extensions=[]
         if function_choice == "":
             print "All of Artifact Collecting..."
             artifact = None
 
         elif function_choice == "1":
-            artifact = []
             print "Insert Collecting Artifact you want"
             input_artifact = raw_input("Artifact: ")
             artifact = input_artifact.split()
             print artifact
 
         elif function_choice == "2":
-            target_extensions = []
             print "Insert Collecting File you want"
             target_extensions_input = raw_input("File extension: ")
             target_extensions = target_extensions_input.split()
