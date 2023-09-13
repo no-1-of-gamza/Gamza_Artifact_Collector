@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# encoding=utf8
 import print_message
 from option import option_set
 
@@ -12,8 +13,8 @@ from a_extension import Extension
 from datetime import datetime
 import os
 import argparse
-import multiprocessing
 import traceback
+from multiprocessing import Pool, Process, freeze_support
 
 
 def Browser_History(inspect_path, Window_version, InstallPath_system_root, profile_list, UTC):
@@ -88,13 +89,15 @@ def Recycle_bin(inspect_path, UTC):
 
 def Extension_files(inspect_path, UTC, target_extensions):
     os.mkdir("%s//Extension_file" % inspect_path)
-    Trashbin_result_path = str(inspect_path) + "\\Extension_file"
+    Extension_files_artifact_result_path = str(inspect_path) + "\\Extension_file"
 
-    Extension_files_artifact = Extension(Trashbin_result_path, UTC, target_extensions)
-    Extension_files_artifact.create_dir(Trashbin_result_path, Extension_files_artifact.drive_list)
+    Extension_files_artifact = Extension(Extension_files_artifact_result_path, UTC, target_extensions)
+    Extension_files_artifact.create_dir(Extension_files_artifact.drive_list)
     Extension_files_artifact.collect()
-    with multiprocessing.Pool(processes=4) as pool:
-        pool.map(Extension_files_artifact.dump, Extension_files_artifact.src_dst)
+    
+    Extension_files_artifact.dump(src_dst)
+    with Pool(processes=4) as pool:
+        pool.map(process_dump, Extension_files_artifact.src_dst)
 
     print "Extension files...complete"
 
@@ -147,7 +150,7 @@ def main():
         artifact=[]
         target_extensions=[]
         if function_choice == "":
-            print "All of Artifact Collecting..."
+            print "Function Choice is nothing..All of Artifact Collecting..."
             artifact = None
 
         elif function_choice == "1":
@@ -163,9 +166,13 @@ def main():
             print target_extensions
             if not target_extensions:
                 print "No file extension entered"
+        print(UTC)
+        print(Window_version)
+        print(InstallPath_system_root)
+        print(profile_list)
 
         # Collect all default artifacts if no specific options are provided
-        if (artifact is None or not artifact) and target_extensions is None:
+        if (artifact is None or artifact ==[] ) and target_extensions ==[]:
             print "All of Artifact Collecting..."
             Browser_History(inspect_path, Window_version, InstallPath_system_root, profile_list, UTC)
             Event_log(inspect_path, Window_version, InstallPath_system_root, UTC)
@@ -200,5 +207,13 @@ def main():
 
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()
+    freeze_support()
+    processes = []
+    for i in range(4):
+        process = Process(target=Extension_files)
+        processes.append(process)
+        process.start()
+
+    for process in processes:
+        process.join()
     main()
