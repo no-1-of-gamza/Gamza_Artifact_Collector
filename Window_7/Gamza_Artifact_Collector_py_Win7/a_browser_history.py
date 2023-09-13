@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+# encoding=utf8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+
 import os
 from datetime import datetime, timedelta
 import shutil
@@ -55,13 +61,13 @@ class Browser_Config:
 
         dir_list = os.listdir(path)
         for item_name in dir_list:
-            if item_name == "Google" and os.path.isdir(path + item_name):
+            if "Google" in item_name and os.path.isdir(path + item_name):
                 path += item_name + "\\"
                 break
 
         dir_list = os.listdir(path)
         for item_name in dir_list:
-            if item_name == "Chrome" and os.path.isdir(path + item_name):
+            if "Chrome" in item_name and os.path.isdir(path + item_name):
                 path += item_name + "\\"
 
                 collected_subpath["history"] = [
@@ -186,13 +192,13 @@ class Browser_Config:
 
         dir_list = os.listdir(path)
         for item_name in dir_list:
-            if item_name == "Microsoft" and os.path.isdir(path + item_name):
+            if "Microsoft" in item_name and os.path.isdir(path + item_name):
                 path += item_name + "\\"
                 break
 
         dir_list = os.listdir(path)
         for item_name in dir_list:
-            if item_name == "Edge" and os.path.isdir(path + item_name):
+            if "Edge" in item_name and os.path.isdir(path + item_name):
                 path += item_name + "\\"
 
                 collected_subpath["history"] = [
@@ -327,13 +333,13 @@ class Browser_Config:
 
         dir_list = os.listdir(path)
         for item_name in dir_list:
-            if item_name == "Naver" and os.path.isdir(path + item_name):
+            if "Naver" in item_name and os.path.isdir(path + item_name):
                 path += item_name + "\\"
                 break
 
         dir_list = os.listdir(path)
         for item_name in dir_list:
-            if item_name == "Naver Whale" and os.path.isdir(path + item_name):
+            if "Naver Whale" in item_name and os.path.isdir(path + item_name):
                 path += item_name + "\\"
 
                 collected_subpath["history"] = [
@@ -442,7 +448,7 @@ class Browser_Collector:
                 for item in item_list:
                     self.dump_worker(item[0], item[1])
 
-        except FileNotFoundError:
+        except IOError as e:
             print("cannot find the file:", src_path)
 
     def search_directory(self, src_path, dst_path):
@@ -463,10 +469,11 @@ class Browser_Collector:
         try:
             shutil.copyfile(src_path, dst_path)
 
-        except Exception as e:
+        except IOError as e:
+            print(e)
             if "Permission denied" in str(e):
                 dst_path = "\\".join(dst_path.split("\\")[:-1])
-                subprocess.run(['RawCopy.exe', '/FileNamePath:' + src_path, '/OutputPath:' + dst_path])
+                subprocess.call(['RawCopy.exe', '/FileNamePath:' + src_path, '/OutputPath:' + dst_path])
 
     def create_summary(self):
         output = "EventLog     UTC+{}\n".format(self.UTC)
