@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# encoding=utf8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 import os
 import subprocess
 from multiprocessing import Process, Queue
@@ -122,4 +126,3 @@ class EventLog_Collector:
                 print src_path, "cannot dump:", e
 
         signal.put(1)
-
