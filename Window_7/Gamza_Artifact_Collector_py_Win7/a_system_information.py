@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 import _winreg as winreg
 
 class Systeminfo_Collector:
@@ -42,17 +45,17 @@ class Systeminfo_Collector:
         timezone_key = winreg.QueryValueEx(subkey_timezone, "TimeZoneKeyName")[0]
         timezone_utc = 0
 
-        if timezone_key == "West Pacific Standard Time" or timezone_key == "AUS Eastern Standard Time":
+        if 'West Pacific Standard Time' in timezone_key or 'AUS Eastern Standard Time' in timezone_key:
             timezone_utc = 10
-        elif timezone_key == "Korea Standard Time" or timezone_key == "Tokyo Standard Time":
+        elif 'Korea Standard Time' in timezone_key or 'Tokyo Standard Time' in timezone_key:
             timezone_utc = 9
-        elif timezone_key == "China Standard Time" or timezone_key == "Singapore Standard Time" or timezone_key == "Taipei Standard Time":
+        elif 'China Standard Time' in timezone_key or 'Singapore Standard Time' in timezone_key or 'Taipei Standard Time' in timezone_key:
             timezone_utc = 8
-        elif timezone_key == "Pacific Standard Time":
+        elif 'Pacific Standard Time' in timezone_key:
             timezone_utc = -8
-        elif timezone_key == "Eastern Standard Time":
+        elif 'Eastern Standard Time' in timezone_key:
             timezone_utc = -5
-        elif timezone_key == "GMT Standard Time":
+        elif "GMT Standard Time"in timezone_key:
             timezone_utc = 0
 
         self.collected_info["Timezone"] = timezone_utc
