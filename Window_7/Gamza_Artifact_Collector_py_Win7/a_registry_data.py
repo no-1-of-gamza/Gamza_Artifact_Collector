@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# encoding=utf8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 import os
 from datetime import datetime, timedelta
 from multiprocessing import Process, Queue
