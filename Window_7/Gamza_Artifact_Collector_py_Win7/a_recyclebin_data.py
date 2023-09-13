@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# encoding=utf8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 import os
 import sys
 import shutil
@@ -101,18 +105,25 @@ class RecycleBin:
                     for part in src.split("\\")[2:-1]:
                         path += (part + "\\")
                     dst = os.path.join(self.result_path, drive, path)
-                    self.src_dst.append((src, dst))
-                    
+                    #self.src_dst.append((src, dst))
+                    src_dst = (src, dst)
+                    self.dump(src_dst)
                     # get info
                     self.recyclebin_info.append(self.get_file_info(root+"\\"+file))
+            
             self.create_summary(drive)
+            
 
-    def dump(self, src_dst_tuple):
-        src, dst = src_dst_tuple
-        try:          
+    def dump(self, src_dst):
+        src, dst = src_dst
+        try:
             subprocess.call(["RawCopy.exe", "/FileNamePath:"+src, "/OutputPath:"+dst])
-        except OSError:
-            shutil.copyfile(src, dst)
+        except Exception as e :
+            try:
+                shutil.copyfile(src, dst)
+            except Exception as e:
+                pass
+            
 
     def get_file_info(self, file_path):
         stat = os.stat(file_path)
